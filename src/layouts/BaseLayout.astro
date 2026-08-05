@@ -60,6 +60,11 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
           sessionStorage.removeItem("pgt");
           if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
             document.documentElement.classList.add("pgt-enter");
+            // filet : si le script de fin de page ne s'execute pas, on leve
+            // quand meme le panneau au bout d'une seconde et demie.
+            setTimeout(function () {
+              document.documentElement.classList.add("pgt-go");
+            }, 1500);
           }
         }
       } catch (e) {}
@@ -116,14 +121,32 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
         // via l'animation CSS. On retire la classe une fois l'animation finie →
         // le panneau revient au repos (en bas), prêt pour la prochaine couverture.
         if (html.classList.contains("pgt-enter")) {
-          var cleared = false;
-          var clear = function () {
-            if (cleared) return;
-            cleared = true;
-            html.classList.remove("pgt-enter");
+          var revele = false, nettoye = false;
+
+          var nettoyer = function () {
+            if (nettoye) return;
+            nettoye = true;
+            html.classList.remove("pgt-enter", "pgt-go");
           };
-          panel.addEventListener("animationend", clear, { once: true });
-          setTimeout(clear, 900); // filet : si animationend manque (onglet en arrière-plan…)
+
+          // On ne revele qu'une fois le gros du chargement passe : les polices
+          // posees (elles provoquent un reflow) puis deux images de repit. Sinon
+          // l'animation partage le fil d'execution avec l'initialisation de la
+          // page et saccade. Plafond a 450 ms pour ne jamais faire attendre.
+          var reveler = function () {
+            if (revele) return;
+            revele = true;
+            html.classList.add("pgt-go");
+            panel.addEventListener("animationend", nettoyer, { once: true });
+            setTimeout(nettoyer, 900); // filet, arme au vrai depart de l'animation
+          };
+
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+              requestAnimationFrame(function () { requestAnimationFrame(reveler); });
+            });
+          }
+          setTimeout(reveler, 450);
         }
 
         // Retourne l'URL si le lien est interne et « navigable » (sinon null).

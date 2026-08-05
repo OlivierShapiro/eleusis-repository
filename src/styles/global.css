@@ -417,7 +417,6 @@ p { max-width: var(--measure); }
   background-repeat: no-repeat, repeat;
   background-size: 100% 100%, 200px 200px;
   transform: translateY(101%); /* au repos : hors écran, en bas */
-  will-change: transform;
 }
 /* Signature discrète : repères de visée (équerres) au centre du panneau.
    Apparaissent en fondu quand il couvre, s'effacent pendant la révélation. */
@@ -440,7 +439,8 @@ p { max-width: var(--measure); }
 .pgt__sign .mark.tl .arm-v,
 .pgt__sign .mark.br .arm-v { width: 2px; height: 20px; transform: scaleY(1); }
 .pgt.is-covering .pgt__sign { opacity: 0.55; transition-delay: 0.1s; }
-.pgt-enter .pgt__sign { opacity: 0.55; animation: pgt-sign-out 0.55s var(--ease) forwards; }
+.pgt-enter .pgt__sign { opacity: 0.55; }
+.pgt-enter.pgt-go .pgt__sign { animation: pgt-sign-out 0.55s var(--ease) forwards; }
 @keyframes pgt-sign-out { 0%, 35% { opacity: 0.55; } 100% { opacity: 0; } }
 /* liserés rose sur les deux bords (celui qui touche la page est visible) */
 .pgt::before,
@@ -458,12 +458,20 @@ p { max-width: var(--measure); }
 /* départ : couvre en montant (accélère). !important pour l'emporter même
    si l'animation d'arrivée n'est pas encore nettoyée (clic ultra-rapide). */
 .pgt.is-covering {
+  will-change: transform;
   transition: transform 0.42s cubic-bezier(0.5, 0, 0.75, 0);
   transform: translateY(0) !important;
 }
 /* arrivée : le panneau couvre déjà (posé en <head>) puis se retire vers le haut */
 .pgt-enter .pgt {
   transform: translateY(0);
+  will-change: transform;
+}
+/* La revelation ne part qu'au signal .pgt-go, donne par le script quand la
+   page a fini son gros travail de chargement. Sans ca, elle se jouait pile
+   pendant l'execution des bibliotheques et le calcul des polices, et
+   saccadait. */
+.pgt-enter.pgt-go .pgt {
   animation: pgt-reveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes pgt-reveal { to { transform: translateY(-101%); } }
