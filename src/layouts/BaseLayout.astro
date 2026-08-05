@@ -23,6 +23,12 @@ const {
 // URLs absolues pour le SEO (Astro.site défini dans astro.config.mjs).
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
 const ogImage = new URL("/og.jpg", Astro.site).href; // image à fournir : public/og.jpg
+
+// Adresse provisoire (.vercel.app) : on demande aux moteurs de recherche de ne
+// PAS referencer le site, pour ne pas se retrouver avec deux adresses en
+// concurrence le jour du vrai domaine. La consigne dispararait toute seule des
+// que `site` pointera ailleurs que sur vercel.app (voir astro.config.mjs).
+const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
 ---
 
 <!doctype html>
@@ -38,6 +44,7 @@ const ogImage = new URL("/og.jpg", Astro.site).href; // image à fournir : publi
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {adresseProvisoire && <meta name="robots" content="noindex, nofollow" />}
 
     <!-- Masque les éléments à animer AVANT le paint (pas de flash), seulement
          si JS actif et motion autorisé. Le moteur (fin de body) prend le relais. -->
