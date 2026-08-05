@@ -1,0 +1,494 @@
+---
+/**
+ * Projets (FOCUS_PLAN_PAGES §2, refonte) — en-tête à fond vidéo +
+ * « roue de cartes » : catégories au-dessus (déclencheurs au survol),
+ * cartes en éventail/arc en bas. Au survol d'une catégorie : spin rapide +
+ * les projets de la catégorie grandissent au centre, les autres reculent.
+ * Cartes en vignette statique (perf). Dégradés bleus en arrière-plan.
+ * 6 projets. Contenus = PLACEHOLDERS.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+import SouvenirsBoard from "../components/SouvenirsBoard.astro";
+import { projects } from "../data/projects";
+
+const total = String(projects.length).padStart(2, "0");
+
+// Disposition « En coulisses » (page Projets) — même contenu que la page
+// À propos (src/data/souvenirs.ts) mais éparpillé AUTREMENT (plus colonné).
+const coulissesLayout = [
+  { t: "10%", l: "5%",  w: "clamp(150px, 15vw, 220px)", r: "3deg",    cap: "Sur le tournage", align: "left",  p: -20 },
+  { t: "46%", l: "1%",  w: "clamp(150px, 16vw, 235px)", r: "-2.5deg", cap: "L'équipe",        align: "left",  p: 18 },
+  { t: "1%",  l: "37%", w: "clamp(150px, 16vw, 230px)", r: "1.5deg",  cap: "En repérage",     align: "left",  p: 24 },
+  { t: "53%", l: "39%", w: "clamp(150px, 15vw, 215px)", r: "-3deg",   cap: "Direction",       align: "right", p: -16 },
+  { t: "6%",  l: "72%", w: "clamp(150px, 16vw, 235px)", r: "2.5deg",  cap: "Au montage",      align: "right", p: 20 },
+  { t: "50%", l: "74%", w: "clamp(150px, 15vw, 220px)", r: "-1.5deg", cap: "Coulisses",       align: "right", p: -22 },
+];
+
+const baseFilters = [
+  { label: "Tous", value: "all" },
+  { label: "Brand Film", value: "brand-film" },
+  { label: "Publicité", value: "publicite" },
+  { label: "Corporate", value: "corporate" },
+  { label: "Documentaire", value: "documentaire" },
+];
+// Disposition des clips sur la timeline de montage : t = piste (1 = V1, 2 = V2),
+// x = point d'entrée et w = durée, en % de la durée totale. Calibré pour un
+// étagement naturel (les clips d'une même piste ne se chevauchent jamais).
+const clips = [
+  { t: 1, x: 0,  w: 22 },
+  { t: 2, x: 16, w: 20 },
+  { t: 1, x: 26, w: 24 },
+  { t: 2, x: 42, w: 16 },
+  { t: 1, x: 54, w: 20 },
+  { t: 2, x: 64, w: 30 },
+];
+// Graduations de la règle (durée fictive du « montage » : 2 min).
+const ticks = Array.from({ length: 21 }, (_, k) => k * 5);
+const tcMarks = [
+  { x: 0, l: "00:00" }, { x: 25, l: "00:30" }, { x: 50, l: "01:00" },
+  { x: 75, l: "01:30" }, { x: 100, l: "02:00" },
+];
+
+const counts: Record<string, number> = { all: projects.length };
+for (const p of projects) counts[p.category] = (counts[p.category] || 0) + 1;
+const filters = baseFilters.map((f) => ({
+  ...f,
+  count: String(counts[f.value] || 0).padStart(2, "0"),
+}));
+---
+
+<BaseLayout
+  title="Projets · Eleusis"
+  description="Sélection de réalisations Eleusis : films de marque, social, clips, documentaires."
+  active="/projets"
+>
+  <!-- ============ EN-TÊTE (fond vidéo) ============ -->
+  <section class="phead">
+    <video class="phead__bg" data-autoplay autoplay muted loop playsinline preload="auto">
+      <source src="/videos/projets-bg.mp4" type="video/mp4" />
+    </video>
+    <div class="phead__scrim" aria-hidden="true"></div>
+    <div class="container phead__inner">
+      <p class="label label--accent" data-reveal>// Sélection</p>
+      <h1 class="phead__title" data-split>Projets</h1>
+      <p class="text-muted phead__sub" data-reveal>Balayez la timeline. Cliquez un plan pour ouvrir le projet.</p>
+    </div>
+  </section>
+
+  <!-- ============ ROUE DE CARTES ============ -->
+  <section class="projects">
+    <div class="container">
+      <!-- Catégories au-dessus (déclencheurs) -->
+      <div class="cats" role="group" aria-label="Catégories de projets" data-reveal>
+        <div class="cats__row">
+          {filters.map((f, i) => (
+            <button class="cat" type="button" data-filter={f.value} aria-pressed={i === 0 ? "true" : "false"}>
+              <span class="cat__label">{f.label}</span>
+              <span class="cat__count">{f.count}</span>
+            </button>
+          ))}
+          <span class="sigframe" aria-hidden="true">
+            <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+            <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          </span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Mur de regie : six moniteurs en lecture, un seul a l'antenne.
+         Place hors du conteneur pour gagner la largeur des marges. -->
+    <div class="wall" id="wall" data-reveal>
+        {projects.map((p, i) => (
+          <a
+            class:list={["wall__mon", { "is-live": i === 0, "is-soon": p.placeholder }]}
+            data-i={i}
+            data-category={p.category}
+            href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
+            aria-label={`${p.title}, ${p.placeholder ? "a venir" : p.cardType}`}
+            aria-current={i === 0 ? "true" : undefined}
+          >
+            <span class="wall__screen">
+              {p.placeholder ? (
+                <span class="coming-soon">
+                  <span class="coming-soon__grad"></span>
+                  <span class="coming-soon__label">Prochainement</span>
+                </span>
+              ) : (
+                <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+              )}
+              <span class="wall__scan" aria-hidden="true"></span>
+              <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+              <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+              <span class="wall__num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+              <span class="wall__live" aria-hidden="true"><i></i>Live</span>
+              <span class="wall__tc" aria-hidden="true">00:00:00</span>
+            </span>
+            <span class="wall__cap">
+              <span class="wall__title">{p.title}</span>
+              <span class="wall__type">{p.placeholder ? "A venir" : p.cardType}</span>
+            </span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- ============ EN COULISSES : mini galerie BTS ============ -->
+  <section class="bts">
+    <div class="container">
+      <div class="bts__head" data-reveal>
+        <p class="label label--accent">// En coulisses</p>
+        <p class="bts__hint text-muted">L'envers du décor, sur le terrain.</p>
+      </div>
+      <SouvenirsBoard layout={coulissesLayout} />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* ---------- En-tête fond vidéo ---------- */
+  .phead { position: relative; overflow: hidden; background: #0f0f11;
+    padding-top: calc(var(--nav-h) + clamp(56px, 14vh, 170px)); padding-bottom: clamp(48px, 9vw, 110px); }
+  .phead__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.8) brightness(0.5); }
+  .phead__scrim { position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 90% at 78% -8%, rgba(40,70,120,0.28) 0%, rgba(20,20,28,0) 50%),
+      linear-gradient(to top, rgba(15,15,17,0.92) 0%, rgba(15,15,17,0.35) 55%, rgba(15,15,17,0.6) 100%); }
+  .phead__inner { position: relative; z-index: 2; }
+  .phead__title { font-size: clamp(3.5rem, 14vw, 11rem); letter-spacing: 0.01em; margin-top: 0.1em; }
+  .phead__sub { margin-top: 1.4em; font-size: 0.95rem; }
+
+  /* ---------- Section roue (dégradés bleus en fond) ---------- */
+  .projects {
+    position: relative;
+    overflow: hidden;
+    background:
+      radial-gradient(52% 44% at 100% 50%, rgba(52,98,175,0.26) 0%, rgba(18,18,20,0) 80%),
+      radial-gradient(52% 44% at 0% 50%, rgba(52,98,175,0.20) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-bottom: clamp(48px, 8vw, 110px);
+  }
+
+  /* ---------- Catégories : barre de régie ----------
+     Passées du gros display à du mono petit et espacé, dans le meme langage
+     que les incrustations du mur. Séparées par de fins traits verticaux et
+     posées sur une réglure, comme un bandeau de commande. */
+  .cats { padding-block: clamp(24px, 3.6vw, 44px); }
+  .cats__row {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 0; /* l'espacement vient du padding des items */
+    padding-bottom: 14px;
+  }
+  /* réglure fine sous la barre, arrêtée avant les bords */
+  .cats__row::after {
+    content: "";
+    position: absolute; left: 12%; right: 12%; bottom: 0; height: 1px;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, var(--line) 18%, var(--line) 82%, rgba(255,255,255,0) 100%);
+  }
+  .cat {
+    position: relative;
+    display: inline-flex; align-items: baseline; gap: 0.55em;
+    padding: 0.4em clamp(13px, 1.9vw, 26px);
+    font-family: var(--font-mono); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    font-size: 0.82rem; line-height: 1;
+    color: var(--text-faint);
+    transition: color var(--dur-sign) var(--ease);
+  }
+  /* trait vertical entre deux catégories */
+  .cat + .cat::before {
+    content: "";
+    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+    width: 1px; height: 10px; background: var(--line-strong);
+  }
+  .cat:hover, .cat[aria-pressed="true"] { color: var(--text); }
+  .cat__count {
+    font-family: var(--font-mono); font-weight: 500;
+    font-size: 0.62em; letter-spacing: 0.06em; color: var(--accent);
+    align-self: flex-start; margin-top: -0.1em;
+  }
+
+  /* ---------- MUR DE REGIE : six moniteurs, un seul a l'antenne ---------- */
+  .wall {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    /* plus large que le conteneur : on récupère les marges laterales */
+    width: min(94vw, 1560px);
+    margin-inline: auto;
+    gap: clamp(18px, 2.4vw, 38px);
+    margin-top: clamp(22px, 3.2vw, 44px);
+  }
+
+  .wall__mon {
+    display: block;
+    transition: transform 0.45s var(--ease), opacity var(--dur-sign) var(--ease);
+  }
+  /* l'ecran lui meme */
+  .wall__screen {
+    position: relative; display: block;
+    aspect-ratio: 16 / 9; overflow: hidden;
+    border-radius: 2px; background: #05050a;
+    border: 1px solid var(--line);
+    box-shadow: 0 16px 40px -24px rgba(0,0,0,0.9);
+    transition:
+      border-color var(--dur-sign) var(--ease),
+      box-shadow var(--dur-sign) var(--ease);
+  }
+  .wall__screen :global(video),
+  .wall__screen :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .wall__screen :global(video) {
+    object-fit: cover; display: block;
+    /* au repos : moniteur de controle, sombre et desature */
+    filter: grayscale(0.85) brightness(0.42) contrast(1.05);
+    transition: filter 0.5s var(--ease);
+  }
+  /* lignes de balayage tres discretes, pour la texture moniteur */
+  .wall__scan {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.035) 0 1px,
+      rgba(0,0,0,0) 1px 3px
+    );
+  }
+
+  /* --- le moniteur a l'antenne --- */
+  .wall__mon.is-live { transform: scale(1.03); z-index: 5; }
+  .wall__mon.is-live .wall__screen {
+    border-color: var(--accent-border);
+    box-shadow: 0 0 0 1px rgba(255,30,99,0.35), 0 26px 60px -22px var(--accent-glow);
+  }
+  .wall__mon.is-live .wall__screen :global(video) {
+    filter: grayscale(0) brightness(1) contrast(1);
+  }
+  /* les autres reculent encore quand la souris est sur le mur */
+  .wall:hover .wall__mon:not(.is-live) { opacity: 0.55; }
+
+  /* --- incrustations facon regie --- */
+  .wall__num, .wall__live, .wall__tc {
+    position: absolute; z-index: 3; pointer-events: none;
+    font-family: var(--font-mono); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.55rem;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.9);
+  }
+  .wall__num { top: 9px; left: 10px; color: var(--text-muted); }
+  .wall__live {
+    top: 9px; right: 10px; color: var(--text);
+    display: inline-flex; align-items: center; gap: 6px;
+    opacity: 0; transition: opacity var(--dur-sign) var(--ease);
+  }
+  .wall__live i {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+    animation: wall-rec 1.9s ease-in-out infinite;
+  }
+  @keyframes wall-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+  .wall__tc {
+    bottom: 9px; right: 10px; color: var(--text-muted);
+    opacity: 0; transition: opacity var(--dur-sign) var(--ease);
+  }
+  .wall__mon.is-live .wall__live, .wall__mon.is-live .wall__tc { opacity: 1; }
+
+  /* equerres de visee : tracees seulement sur le moniteur a l'antenne */
+  .wall__screen .mark { position: absolute; width: 12px; height: 12px; z-index: 3; }
+  .wall__screen .mark.tl { top: 9px; left: 9px; }
+  .wall__screen .mark.br { bottom: 9px; right: 9px; }
+  .wall__screen .mark .arm-h { transform: scaleX(0); }
+  .wall__screen .mark .arm-v { transform: scaleY(0); }
+  .wall__mon.is-live .wall__screen .mark .arm-h { transform: scaleX(1); transition: transform var(--dur-sign) var(--ease); }
+  .wall__mon.is-live .wall__screen .mark .arm-v { transform: scaleY(1); transition: transform var(--dur-sign) var(--ease); }
+  /* le numero laisse la place aux equerres quand elles se tracent */
+  .wall__mon.is-live .wall__num { opacity: 0; transition: opacity var(--dur-sign) var(--ease); }
+
+  /* --- legende sous l'ecran --- */
+  .wall__cap { display: grid; gap: 1px; margin-top: 9px; }
+  .wall__title {
+    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(0.72rem, 1vw, 0.92rem); line-height: 1.15;
+    color: var(--text-faint); transition: color var(--dur-sign) var(--ease);
+  }
+  .wall__mon.is-live .wall__title { color: var(--text); }
+  .wall__type {
+    font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em;
+    font-size: 0.52rem; color: var(--text-muted);
+  }
+  .wall__mon.is-soon .wall__screen { border-style: dashed; }
+  /* hors categorie filtree */
+  .wall__mon.is-out { opacity: 0.16; pointer-events: none; }
+  .wall__mon.is-out.is-live { transform: none; }
+
+  @media (max-width: 860px) { .wall { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 520px) { .wall { grid-template-columns: 1fr; } }
+  /* ---------- En coulisses — mini galerie BTS ---------- */
+  .bts {
+    background:
+      radial-gradient(55% 46% at 0% 50%, rgba(52,98,175,0.22) 0%, rgba(18,18,20,0) 80%),
+      radial-gradient(55% 46% at 100% 50%, rgba(52,98,175,0.16) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-block: clamp(44px, 7vw, 92px);
+  }
+  .bts__head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; margin-bottom: clamp(20px, 3vw, 38px);
+  }
+  .bts__hint { font-size: 0.84rem; }
+</style>
+
+<script is:inline>
+  (function () {
+    var wall = document.getElementById("wall");
+    if (!wall) return;
+
+    var cats = Array.prototype.slice.call(document.querySelectorAll(".cat"));
+    var catsRow = document.querySelector(".cats__row");
+    var sigframe = document.querySelector(".cats .sigframe");
+    var mons = Array.prototype.slice.call(wall.querySelectorAll(".wall__mon"));
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var small = function () { return window.matchMedia("(max-width: 760px)").matches; };
+
+    var selected = "all"; // categorie verrouillee (clic), persiste
+    var live = 0;         // moniteur a l'antenne
+    var onScreen = false;
+
+    // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
+    function moveIndicator(btn) {
+      if (!sigframe || !btn) return;
+      var PAD = 9;
+      sigframe.style.opacity = "1";
+      sigframe.style.transform = "translate(" + (btn.offsetLeft - PAD) + "px," + (btn.offsetTop - PAD) + "px)";
+      sigframe.style.width = btn.offsetWidth + PAD * 2 + "px";
+      sigframe.style.height = btn.offsetHeight + PAD * 2 + "px";
+      sigframe.classList.remove("is-drawn");
+      void sigframe.offsetWidth; // reflow, reinitialise le trace
+      sigframe.classList.add("is-drawn");
+    }
+
+    function videoOf(i) { return mons[i] ? mons[i].querySelector("video") : null; }
+
+    // Tous les moniteurs tournent en meme temps : c'est le principe du mur.
+    // On ne lance rien hors champ, ni au doigt (batterie), ni en reduced-motion.
+    function playAll() {
+      if (!onScreen || reduce || small()) return;
+      mons.forEach(function (m) {
+        if (m.classList.contains("is-out")) return;
+        var v = m.querySelector("video");
+        if (!v) return;
+        var pr = v.play();
+        if (pr && pr.catch) pr.catch(function () {});
+      });
+    }
+    function pauseAll() {
+      mons.forEach(function (m) {
+        var v = m.querySelector("video");
+        if (v) v.pause();
+      });
+    }
+
+    // Passe le moniteur i a l'antenne.
+    function goLive(i) {
+      if (i === live || !mons[i] || mons[i].classList.contains("is-out")) return;
+      live = i;
+      mons.forEach(function (m, k) {
+        m.classList.toggle("is-live", k === i);
+        if (k === i) m.setAttribute("aria-current", "true");
+        else m.removeAttribute("aria-current");
+      });
+    }
+
+    // Timecode du moniteur a l'antenne, lu sur sa propre video.
+    var raf = 0, lastTC = "";
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function tick() {
+      var m = mons[live];
+      var el = m ? m.querySelector(".wall__tc") : null;
+      if (el) {
+        var v = m.querySelector("video");
+        var txt = "00:00:00";
+        if (v && !isNaN(v.currentTime)) {
+          var t = v.currentTime;
+          txt = pad(Math.floor(t / 60) % 60) + ":" + pad(Math.floor(t) % 60) + ":" + pad(Math.floor((t % 1) * 25));
+        }
+        if (txt !== lastTC) { lastTC = txt; el.textContent = txt; }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    function startTC() { if (!raf) raf = requestAnimationFrame(tick); }
+    function stopTC() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+
+    // Le survol (ou le focus clavier) bascule l'antenne. Le clic suit le lien.
+    mons.forEach(function (m, i) {
+      m.addEventListener("mouseenter", function () { goLive(i); });
+      m.addEventListener("focus", function () { goLive(i); });
+    });
+
+    // Filtre : les moniteurs hors categorie s'eteignent et sortent du clavier.
+    function applyFilter(cat) {
+      var first = -1;
+      mons.forEach(function (m, i) {
+        var on = cat === "all" || m.getAttribute("data-category") === cat;
+        m.classList.toggle("is-out", !on);
+        if (on) {
+          if (first < 0) first = i;
+          m.removeAttribute("tabindex"); m.removeAttribute("aria-hidden");
+        } else {
+          m.setAttribute("tabindex", "-1"); m.setAttribute("aria-hidden", "true");
+          var v = m.querySelector("video"); if (v) v.pause();
+        }
+      });
+      // categorie sans projet : on rallume tout (pas de mur eteint)
+      if (first < 0) {
+        mons.forEach(function (m) {
+          m.classList.remove("is-out");
+          m.removeAttribute("tabindex"); m.removeAttribute("aria-hidden");
+        });
+        playAll();
+        return;
+      }
+      if (mons[live].classList.contains("is-out")) goLive(first);
+      playAll();
+    }
+
+    function syncPressed() {
+      cats.forEach(function (b) {
+        b.setAttribute("aria-pressed", b.getAttribute("data-filter") === selected ? "true" : "false");
+      });
+    }
+
+    cats.forEach(function (btn) {
+      var f = function () { moveIndicator(btn); applyFilter(btn.getAttribute("data-filter")); };
+      btn.addEventListener("mouseenter", f);
+      btn.addEventListener("focus", f);
+      btn.addEventListener("click", function () {
+        selected = btn.getAttribute("data-filter");
+        syncPressed(); moveIndicator(btn); applyFilter(selected);
+      });
+    });
+    if (catsRow) catsRow.addEventListener("mouseleave", function () {
+      moveIndicator(document.querySelector('.cat[aria-pressed="true"]') || cats[0]);
+      applyFilter(selected);
+    });
+
+    var place = function () {
+      var a = document.querySelector('.cat[aria-pressed="true"]') || cats[0];
+      moveIndicator(a);
+    };
+    place(); setTimeout(place, 200);
+    window.addEventListener("load", place);
+    window.addEventListener("resize", place);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
+
+    // Le mur ne tourne que quand il est a l'ecran.
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          onScreen = e.isIntersecting;
+          if (onScreen) { playAll(); startTC(); }
+          else { pauseAll(); stopTC(); }
+        });
+      }, { threshold: 0.1 }).observe(wall);
+    } else { onScreen = true; playAll(); startTC(); }
+  })();
+</script>

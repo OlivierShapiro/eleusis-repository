@@ -1,0 +1,333 @@
+---
+/**
+ * Page projet individuelle (FOCUS_PLAN_PAGES §3) — générée par projet réel.
+ * En-tête compact + bande d'images (stills à venir) + vidéo regardable
+ * (embed YouTube/Vimeo avec contrôles) + « Notre approche » (description) +
+ * crédits + projet suivant.
+ */
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import ProjectCard from "../../components/ProjectCard.astro";
+import { projects, type Project } from "../../data/projects";
+
+export function getStaticPaths() {
+  const real = projects.filter((p) => !p.placeholder);
+  return real.map((p) => ({
+    params: { slug: p.slug },
+    props: { project: p, others: real.filter((x) => x.slug !== p.slug).slice(0, 2) },
+  }));
+}
+
+interface Props { project: Project; others: Project[]; }
+const { project, others } = Astro.props;
+
+const meta: [string, string][] = [];
+if (project.client) meta.push(["Client", project.client]);
+meta.push(["Type", project.cardType]);
+meta.push(["Année", project.year || "[ANNÉE]"]);
+
+// Crédits du projet (définis dans les données) ; sinon placeholders génériques.
+const credits: [string, string][] = project.credits ?? [
+  ["Réalisation", "[NOM]"],
+  ["Image", "[NOM]"],
+  ["Montage", "[NOM]"],
+  ["Étalonnage", "[NOM]"],
+  ["Musique", "[NOM]"],
+];
+
+// Stills de la bande d'images (public/images/projets/<slug>/still-0X.png).
+const stillPaths = project.stills
+  ? Array.from({ length: project.stills }, (_, i) => `/images/projets/${project.slug}/still-0${i + 1}.webp`)
+  : [];
+
+const yt = project.embed?.provider === "youtube";
+const vimeo = project.embed?.provider === "vimeo";
+const filmSrc = yt
+  ? `https://www.youtube-nocookie.com/embed/${project.embed!.id}?rel=0&enablejsapi=1`
+  : vimeo
+    ? `https://player.vimeo.com/video/${project.embed!.id}`
+    : "";
+---
+
+<BaseLayout
+  title={`${project.title} · Eleusis`}
+  description={project.description || `${project.title}, réalisation Eleusis.`}
+  active="/projets"
+>
+  <!-- ============ EN-TÊTE ============ -->
+  <section class="pj-head">
+    <div class="container pj-head__inner">
+      <p class="label label--accent" data-reveal>// Réalisation</p>
+      <h1 class="pj-head__title" data-split>{project.title}</h1>
+      <p class="pj-head__meta" data-reveal>
+        {meta.map(([k, v], i) => (
+          <>
+            {i > 0 && <span class="pj-sep"> · </span>}
+            <span class="pj-meta-k">{k} :</span> <span class="text-muted">{v}</span>
+          </>
+        ))}
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ BANDE D'IMAGES (stills : à venir) ============ -->
+  <section class="pj-strip">
+    <div class="pj-strip__tilt">
+      <div class="pj-strip__track" data-marquee="34">
+        {Array.from({ length: 2 }).map(() => (
+          <div class="pj-strip__group" aria-hidden="true">
+            {stillPaths.length > 0
+              ? stillPaths.map((src) => (
+                  <div class="pj-strip__item">
+                    <img src={src} alt="" loading="lazy" />
+                  </div>
+                ))
+              : ["01", "02", "03", "04", "05", "06"].map((n) => (
+                  <div class="pj-strip__item">
+                    <div class="media-ph"><span class="media-ph__label label">[ IMAGE {n} ]</span></div>
+                  </div>
+                ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VIDÉO PRINCIPALE (regardable) ============ -->
+  <section class="pj-film">
+    <div class="container">
+      <div class="pj-film__frame" data-clip>
+        <div class="clip__inner">
+          {filmSrc ? (
+            <>
+              {yt && (
+                <img class="pj-film__poster" src={`https://i.ytimg.com/vi/${project.embed!.id}/hqdefault.jpg`} alt="" loading="lazy" />
+              )}
+              <iframe
+                class="pj-film__iframe"
+                data-src={filmSrc}
+                data-provider={yt ? "youtube" : "vimeo"}
+                title={project.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+                allowfullscreen
+              ></iframe>
+              <button class="pj-film__guard" type="button" aria-label={`Lire la vidéo : ${project.title}`}></button>
+            </>
+          ) : (
+            <div class="media-ph"><span class="media-ph__label label">[ VIDÉO ]</span></div>
+          )}
+        </div>
+        <span class="mark tl is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+        <span class="mark br is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+      </div>
+      <p class="pj-film__cap label" data-reveal>// Film complet</p>
+    </div>
+  </section>
+
+  <!-- ============ NOTRE APPROCHE ============ -->
+  <section class="pj-approche">
+    <div class="container pj-approche__inner">
+      <p class="label label--accent" data-reveal>// Approche</p>
+      <h2 class="pj-approche__title" data-split>Notre approche</h2>
+      {project.description && (
+        <p class="pj-approche__body text-muted" data-reveal>{project.description}</p>
+      )}
+    </div>
+  </section>
+
+  <!-- ============ CRÉDITS ============ -->
+  <section class="pj-credits">
+    <div class="container">
+      <p class="label label--accent" data-reveal>// Crédits</p>
+      <dl class="pj-credits__list">
+        {credits.map(([role, name]) => (
+          <div class="pj-credits__row" data-reveal>
+            <dt class="pj-credits__role">{role}</dt>
+            <dd class="pj-credits__name">{name}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <!-- ============ AUTRES PROJETS ============ -->
+  <section class="pj-others">
+    <div class="container">
+      <p class="label label--accent pj-others__label" data-reveal>// Autres projets</p>
+      <div class="pj-others__stack" data-reveal>
+        {others.map((o, i) => (
+          <div class:list={["pj-others__item", i === 0 ? "is-a" : "is-b"]}>
+            <ProjectCard
+              client={o.title}
+              type={o.cardType}
+              index={String(i + 1).padStart(2, "0")}
+              total={String(others.length).padStart(2, "0")}
+              category={o.category}
+              ratio="16 / 9"
+              cardVideo={o.cardVideo}
+              embed={o.embed as any}
+              video={o.video}
+              href={`/projets/${o.slug}`}
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .media-ph {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    background:
+      radial-gradient(120% 100% at 72% -10%, rgba(48,92,165,0.42) 0%, rgba(20,20,28,0) 58%),
+      linear-gradient(155deg, #1a1a22 0%, #131318 60%, #0e0e12 100%);
+  }
+  .media-ph__label { color: var(--text-faint); letter-spacing: 0.24em; }
+
+  /* En-tête compact centré */
+  .pj-head {
+    background:
+      radial-gradient(70% 44% at 50% 50%, rgba(48,92,165,0.18) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-top: calc(var(--nav-h) + clamp(36px, 7vh, 80px));
+    padding-bottom: clamp(28px, 5vh, 56px);
+    text-align: center;
+  }
+  .pj-head__title { font-size: clamp(2.4rem, 6vw, 5rem); letter-spacing: 0.01em; margin: 0.3em 0 0.6em; }
+  .pj-head__meta { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; max-width: none; }
+  .pj-meta-k { color: var(--text); text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.7rem; }
+  .pj-sep { color: var(--accent); }
+
+  /* Bande d'images diagonale */
+  .pj-strip {
+    overflow: hidden;
+    background: radial-gradient(70% 80% at 50% 50%, rgba(48,92,165,0.14) 0%, rgba(18,18,20,0) 65%), var(--bg-base);
+    padding-block: clamp(56px, 9vw, 120px);
+  }
+  .pj-strip__tilt {
+    transform: rotate(-4.5deg);
+    width: 118%;
+    margin-left: -9%;
+    /* Entrée à l'arrivée sur la page : la bande se pose (fondu + légère
+       montée + zoom) au lieu d'apparaître à plat. On anime les propriétés
+       individuelles translate/scale → elles se composent avec transform:
+       rotate (l'inclinaison est préservée) et n'entrent pas en conflit avec
+       le translateY des hauteurs alternées des items, ni avec le marquee. */
+    animation: pj-strip-in 1s var(--ease) 0.1s both;
+  }
+  @keyframes pj-strip-in {
+    from { opacity: 0; translate: 0 38px; scale: 0.96; }
+    to   { opacity: 1; translate: 0 0;    scale: 1; }
+  }
+  .pj-strip__track { display: flex; width: max-content; will-change: transform; }
+  .pj-strip__group { display: flex; align-items: center; gap: clamp(14px, 1.8vw, 28px); padding-right: clamp(14px, 1.8vw, 28px); }
+  .pj-strip__item { position: relative; flex: none; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; background: var(--bg-deep); }
+  .pj-strip__item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pj-strip__item:nth-child(3n + 1) { height: clamp(150px, 20vw, 230px); }
+  .pj-strip__item:nth-child(3n + 2) { height: clamp(116px, 15vw, 176px); transform: translateY(30px); }
+  .pj-strip__item:nth-child(3n + 3) { height: clamp(172px, 23vw, 264px); transform: translateY(-20px); }
+
+  /* Vidéo principale */
+  .pj-film { background: var(--bg-base); padding-bottom: clamp(64px, 10vw, 130px); }
+  .pj-film__frame {
+    position: relative; aspect-ratio: 16 / 9; max-width: 1080px; margin-inline: auto;
+    overflow: hidden; border-radius: 2px; background: var(--bg-deep);
+  }
+  .pj-film__frame .clip__inner { position: absolute; inset: 0; }
+  /* poster (z0) + iframe préchargée mais pointer-events:none (le scroll passe
+     à travers, Lenis n'est plus bloqué) + capteur de clic transparent (z3)
+     qui active et lance la vidéo. */
+  .pj-film__poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; }
+  .pj-film__iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; z-index: 1; pointer-events: none; }
+  .pj-film__guard { position: absolute; inset: 0; z-index: 3; border: 0; padding: 0; background: transparent; cursor: pointer; }
+  .pj-film__frame .mark { position: absolute; width: 14px; height: 14px; z-index: 2; pointer-events: none; }
+  .pj-film__frame .mark.tl { top: 16px; left: 16px; }
+  .pj-film__frame .mark.br { bottom: 16px; right: 16px; }
+  .pj-film__cap { max-width: 1080px; margin: 1.2em auto 0; color: var(--text-muted); }
+
+  /* Notre approche (centré) */
+  .pj-approche {
+    background: radial-gradient(60% 46% at 50% 50%, rgba(48,92,165,0.16) 0%, rgba(18,18,20,0) 80%), var(--bg-base);
+    padding-block: clamp(64px, 11vw, 150px);
+    text-align: center;
+  }
+  .pj-approche__inner { display: flex; flex-direction: column; align-items: center; }
+  .pj-approche__title { font-size: clamp(2rem, 5vw, 3.6rem); margin: 0.4em 0 0.6em; }
+  .pj-approche__body { font-size: clamp(0.98rem, 1.4vw, 1.15rem); max-width: 60ch; white-space: pre-line; }
+
+  /* Crédits */
+  .pj-credits {
+    background: radial-gradient(55% 45% at 100% 50%, rgba(48,92,165,0.10) 0%, rgba(18,18,20,0) 80%), var(--bg-base);
+    padding-block: clamp(56px, 9vw, 130px);
+  }
+  .pj-credits__list { margin-top: clamp(28px, 4vw, 48px); border-top: 1px solid var(--line); max-width: 680px; }
+  .pj-credits__row { display: flex; justify-content: space-between; gap: 24px; padding: clamp(14px, 1.6vw, 20px) 0; border-bottom: 1px solid var(--line); }
+  .pj-credits__role { font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.74rem; color: var(--text-muted); flex: none; }
+  .pj-credits__name { font-family: var(--font-mono); font-size: 0.86rem; color: var(--text); text-align: right; }
+
+  /* Autres projets */
+  .pj-others {
+    background:
+      radial-gradient(60% 46% at 50% 50%, rgba(48,92,165,0.12) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-block: clamp(64px, 10vw, 140px);
+  }
+  .pj-others__label { margin-bottom: clamp(28px, 4vw, 56px); text-align: center; }
+
+  /* Deux cartes empilées qui s'écartent au survol (présentées comme la roue) */
+  .pj-others__stack { position: relative; width: min(440px, 80vw); margin: 0 auto; }
+  .pj-others__item { transition: transform 0.55s var(--ease); will-change: transform; }
+  .pj-others__item.is-a { position: relative; z-index: 2; transform: translateX(-3%) rotate(-4deg); }
+  .pj-others__item.is-b { position: absolute; inset: 0; z-index: 1; transform: translateX(3%) rotate(4deg); }
+  /* la carte cachée derrière dépasse à peine au repos */
+  .pj-others__stack:hover .pj-others__item.is-a { transform: translateX(-56%) rotate(-2deg); }
+  .pj-others__stack:hover .pj-others__item.is-b { transform: translateX(56%) rotate(2deg); }
+
+  /* mêmes codes que la roue : infos visibles, pas de méta sous la carte */
+  .pj-others__item :global(.card__meta) { display: none; }
+  .pj-others__item :global(.card__overlay) { opacity: 1; transform: none; }
+  .pj-others__item :global(.card__scrim) { opacity: 1; }
+  .pj-others__item :global(.card__media) { box-shadow: 0 26px 70px -26px rgba(0,0,0,0.75); }
+
+  @media (max-width: 760px) {
+    .pj-others__stack { width: 100%; }
+    .pj-others__item { transform: none !important; }
+    .pj-others__item.is-a, .pj-others__item.is-b { position: relative; inset: auto; margin-bottom: 18px; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    // Charge l'iframe vidéo APRÈS le chargement de la page, pendant un temps
+    // d'inactivité du navigateur → le gros chargement YouTube/Vimeo ne tombe
+    // plus en plein scroll (ce qui figeait le défilement). La vidéo est donc
+    // déjà prête quand on arrive dessus.
+    var f = document.querySelector(".pj-film__iframe[data-src]");
+    if (!f) return;
+    var guard = document.querySelector(".pj-film__guard");
+    function load() {
+      if (f.src) return;
+      f.src = f.getAttribute("data-src");
+    }
+    function schedule() {
+      if ("requestIdleCallback" in window) requestIdleCallback(load, { timeout: 2500 });
+      else setTimeout(load, 800);
+    }
+    if (document.readyState === "complete") schedule();
+    else window.addEventListener("load", schedule, { once: true });
+
+    // Clic : on rend l'iframe interactive et on lance la lecture (déjà préchargée).
+    if (guard) {
+      guard.addEventListener("click", function () {
+        load();
+        f.style.pointerEvents = "auto";
+        var provider = f.getAttribute("data-provider");
+        var msg = provider === "vimeo"
+          ? '{"method":"play"}'
+          : '{"event":"command","func":"playVideo","args":[]}';
+        setTimeout(function () { try { f.contentWindow.postMessage(msg, "*"); } catch (e) {} }, 160);
+        guard.remove();
+      });
+    }
+  })();
+</script>

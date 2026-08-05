@@ -1,0 +1,478 @@
+/* ============================================================
+   ELEUSIS — Design tokens & foundations (Étape 1, statique)
+   Source de vérité : FOCUS_DESIGN_SYSTEM.md §1–§3.
+   Aucune valeur hors tokens. Pas d'animation à cette étape.
+   ============================================================ */
+
+:root {
+  /* — Surfaces (jamais de #000 pur — noir relevé vers le gris) — */
+  /* Semi-transparent : les fonds de section laissent voir la texture .bg-texture
+     posée tout au fond (la teinte reste #121214, seule la texture transparaît). */
+  --bg-base:        rgba(15, 15, 17, 0.35);
+  --bg-raised:      #181820;            /* cartes / panneaux légèrement plus clairs */
+  --bg-deep:        #0e0e12;            /* zones plus profondes (poster vide, etc.) */
+
+  /* — Dégradé de fond principal (hero / grandes sections) — */
+  /* Bleu discret en haut-droite + rose très faible en bas-gauche + base grise */
+  --bg-gradient:
+    radial-gradient(120% 90% at 78% -8%,  rgba(40,70,120,0.32) 0%, rgba(20,20,28,0) 46%),
+    radial-gradient(90% 80% at 10% 110%,  rgba(255,30,99,0.06) 0%, rgba(20,20,28,0) 50%),
+    linear-gradient(165deg, #181820 0%, #141418 55%, #121214 100%);
+
+  /* — Texte — */
+  --text:           #FFFFFF;            /* titres, sous-titres, corps principal */
+  --text-muted:     #8B93A6;            /* petits textes explicatifs (gris bleuté) */
+  --text-faint:     #54545E;            /* méta, numérotation, hints */
+
+  /* — Accent (STRICTEMENT ~10% — voir §4) — */
+  --accent:         #FF1E63;            /* rose-rouge : boutons, labels, signature */
+  --accent-text:    #FFFFFF;            /* texte posé sur fond accent plein */
+  --accent-glow:    rgba(255,30,99,0.35); /* halo léger sous le bouton accent */
+  --accent-border:  rgba(255,30,99,0.50); /* bordure pill/label en accent */
+
+  /* — Lignes — */
+  --line:           rgba(255,255,255,0.10); /* séparateurs 1px */
+  --line-strong:    rgba(255,255,255,0.16); /* bordures de pills neutres */
+
+  /* — Typo — */
+  --font-display: 'Encode Sans Expanded', sans-serif; /* titres — weight 800 */
+  --font-mono:    'IBM Plex Mono', monospace;          /* corps, labels, méta */
+
+  /* — Mouvement (posés ici, utilisés à partir de l'Étape 3) — */
+  --ease:         cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-reveal:   0.8s;   /* apparitions de contenu au scroll */
+  --dur-sign:     0.55s;  /* tracé de la signature (marques de cadrage) */
+  --stagger:      0.08s;  /* décalage entre éléments d'un même groupe */
+
+  /* — Layout — */
+  --nav-h:        72px;
+  --gutter:       clamp(20px, 5vw, 64px);
+  --maxw:         1320px;
+  --measure:      60ch;   /* mesure max du corps en mono */
+}
+
+/* ---------- Reset ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  min-height: 100vh;
+  position: relative; /* ancre .bg-texture (absolute) sur toute la hauteur du document */
+  background-color: #0f0f11; /* secours opaque (overscroll) — la texture est posée par .bg-texture */
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 400;
+  line-height: 1.7;
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+img, picture, video, canvas, svg { display: block; max-width: 100%; }
+input, button, textarea, select { font: inherit; color: inherit; }
+button { background: none; border: 0; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+ul, ol { list-style: none; padding: 0; }
+
+/* ---------- Typographie de base ---------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  text-transform: uppercase;
+  /* 1 et non 0.9 : en capitales accentuées (É, È, À), l'accent monte à ~0.95em
+     au-dessus de la ligne de base. Avec 0.9, il passait par-dessus la ligne
+     précédente sur les titres qui reviennent à la ligne. */
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text);
+}
+
+p { max-width: var(--measure); }
+
+/* Corps explicatif (gris bleuté) */
+.text-muted { color: var(--text-muted); }
+.text-faint { color: var(--text-faint); }
+
+/* Labels / catégories / méta — mono 500 UPPERCASE, large letter-spacing */
+.label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* Micro-label d'amorce en accent : « // mot » */
+.label--accent { color: var(--accent); }
+
+/* Séparateur « // » et numérotation « N°01 / 04 » */
+.sep { color: var(--accent); }
+.count {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--text-faint);
+  font-size: 0.72rem;
+}
+
+/* ---------- Skip link (accessibilité) ---------- */
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 10000;
+  padding: 0.7em 1.1em;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.74rem;
+  border-radius: 2px;
+  transform: translateY(-150%);
+  transition: transform var(--dur-sign) var(--ease);
+}
+.skip-link:focus { transform: translateY(0); }
+
+/* ---------- Layout helpers ---------- */
+.container {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.rule { height: 1px; border: 0; background: var(--line); }
+
+/* ---------- Grain global — §3 (version performante) ----------
+   Au lieu d'un calque mix-blend-mode par section (qui force un repaint
+   plein écran à chaque frame de scroll → lag), on pose UN seul calque
+   fixe, peint une fois, sans blend-mode. Texture quasi identique,
+   coût quasi nul au scroll. La classe .grain reste un simple contexte
+   de positionnement pour le markup existant. */
+.grain { position: relative; }
+
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 150px 150px;
+}
+
+/* Texture de fond « imparfaite » — TOUT AU FOND (z-index -1), derrière tout le
+   contenu, sur toute la hauteur du document → DÉFILE avec la page (pas fixe).
+   Visible uniquement à travers les fonds de section (rendus semi-transparents
+   via --bg-base) ; les images/panneaux opaques la masquent → jamais dessus.
+   Deux couches de bruit gris à grandes échelles non multiples (1500 / 980 px)
+   → la combinaison ne se répète pas de façon perceptible : anomalies partout. */
+.bg-texture {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #0f0f11;
+  /* Anomalies (rayures verticales/diagonales/horizontales + poussières)
+     dessinées et réparties sur tout le champ, posées en DEUX échelles
+     non-multiples décalées (1400 / 950 px) → des anomalies différentes au fil
+     du scroll, sans répétition perceptible. + grain fin. */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1400'%3E%3Cg stroke='white' fill='none'%3E%3Cline x1='560' y1='160' x2='568' y2='1140' stroke-width='1.2' opacity='0.13'/%3E%3Cline x1='1120' y1='150' x2='980' y2='1180' stroke-width='0.85' opacity='0.07'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='70' cy='130' r='1.6' opacity='0.22'/%3E%3Ccircle cx='220' cy='320' r='1.2' opacity='0.13'/%3E%3Ccircle cx='140' cy='640' r='3.6' opacity='0.1'/%3E%3Ccircle cx='60' cy='930' r='1.4' opacity='0.14'/%3E%3Cellipse cx='430' cy='95' rx='1.6' ry='1.1' opacity='0.13'/%3E%3Ccircle cx='380' cy='480' r='1.8' opacity='0.11'/%3E%3Ccircle cx='500' cy='770' r='1.1' opacity='0.16'/%3E%3Ccircle cx='330' cy='1000' r='3.4' opacity='0.09'/%3E%3Ccircle cx='700' cy='150' r='1.5' opacity='0.13'/%3E%3Ccircle cx='760' cy='650' r='3.9' opacity='0.1'/%3E%3Ccircle cx='700' cy='940' r='1.2' opacity='0.14'/%3E%3Ccircle cx='980' cy='210' r='1.3' opacity='0.13'/%3E%3Cellipse cx='1040' cy='540' rx='3.4' ry='2.4' opacity='0.09'/%3E%3Ccircle cx='960' cy='800' r='1.2' opacity='0.14'/%3E%3Ccircle cx='1180' cy='320' r='1' opacity='0.13'/%3E%3Ccircle cx='1260' cy='660' r='1.7' opacity='0.11'/%3E%3Ccircle cx='1300' cy='960' r='1.2' opacity='0.13'/%3E%3Ccircle cx='1120' cy='1160' r='1.5' opacity='0.11'/%3E%3Ccircle cx='870' cy='300' r='4.2' opacity='0.08'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1400' height='1400'%3E%3Cg stroke='white' fill='none'%3E%3Cline x1='560' y1='160' x2='568' y2='1140' stroke-width='1.2' opacity='0.13'/%3E%3Cline x1='1120' y1='150' x2='980' y2='1180' stroke-width='0.85' opacity='0.07'/%3E%3C/g%3E%3Cg fill='white'%3E%3Ccircle cx='70' cy='130' r='1.6' opacity='0.22'/%3E%3Ccircle cx='220' cy='320' r='1.2' opacity='0.13'/%3E%3Ccircle cx='140' cy='640' r='3.6' opacity='0.1'/%3E%3Ccircle cx='60' cy='930' r='1.4' opacity='0.14'/%3E%3Cellipse cx='430' cy='95' rx='1.6' ry='1.1' opacity='0.13'/%3E%3Ccircle cx='380' cy='480' r='1.8' opacity='0.11'/%3E%3Ccircle cx='500' cy='770' r='1.1' opacity='0.16'/%3E%3Ccircle cx='330' cy='1000' r='3.4' opacity='0.09'/%3E%3Ccircle cx='700' cy='150' r='1.5' opacity='0.13'/%3E%3Ccircle cx='760' cy='650' r='3.9' opacity='0.1'/%3E%3Ccircle cx='700' cy='940' r='1.2' opacity='0.14'/%3E%3Ccircle cx='980' cy='210' r='1.3' opacity='0.13'/%3E%3Cellipse cx='1040' cy='540' rx='3.4' ry='2.4' opacity='0.09'/%3E%3Ccircle cx='960' cy='800' r='1.2' opacity='0.14'/%3E%3Ccircle cx='1180' cy='320' r='1' opacity='0.13'/%3E%3Ccircle cx='1260' cy='660' r='1.7' opacity='0.11'/%3E%3Ccircle cx='1300' cy='960' r='1.2' opacity='0.13'/%3E%3Ccircle cx='1120' cy='1160' r='1.5' opacity='0.11'/%3E%3Ccircle cx='870' cy='300' r='4.2' opacity='0.08'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.05'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1700' height='1700'%3E%3Cfilter id='t'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.013' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23t)' opacity='0.05'/%3E%3C/svg%3E");
+  background-repeat: repeat, repeat, repeat, repeat;
+  background-size: 1400px 1400px, 950px 950px, 220px 220px, 1700px 1700px;
+  background-position: 0 0, 320px 540px, 0 0, 0 0;
+}
+
+/* Voile sombre fixe en haut : garde la zone de la barre de navigation NOIRE
+   (sinon la texture de fond transparaît derrière la nav en haut de page).
+   Sous la nav (z-50), au-dessus du contenu. */
+.top-scrim {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: clamp(84px, 12vh, 140px);
+  z-index: 40;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #0d0d11 0%, rgba(13,13,17,0.82) 36%, rgba(13,13,17,0) 100%);
+}
+
+/* Fond principal dégradé (hero / grandes sections) */
+.bg-gradient { background: var(--bg-gradient); }
+
+/* ============================================================
+   Effet PELLICULE — texture analogique RÉELLE + vignette.
+   Posée DANS le fond (hero d'accueil), au-dessus du dégradé mais SOUS
+   le texte. Deux pseudo-couches :
+     ::before → image de texture (anomalies claires sur noir) en
+                mix-blend-mode:screen → le noir disparaît, seules les
+                marques claires ressortent. Intensité via --film-opacity.
+     ::after  → vignette (dégradé CSS) en fusion normale.
+   Fichier attendu : public/images/texture/film-overlay.png (ou .jpg).
+   Statique → peint une fois, aucun coût au scroll.
+   ============================================================ */
+.film-fx { position: absolute; inset: 0; pointer-events: none; }
+/* Texture analogique réelle (anomalies CLAIRES sur fond NOIR). Le screen
+   neutralise le noir → seules les marques claires ressortent sur le fond.
+   Régler l'intensité avec --film-opacity (0 = invisible, 1 = plein). */
+.film-fx::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("/images/texture/film-overlay.png") center / cover no-repeat;
+  mix-blend-mode: screen;
+  opacity: var(--film-opacity, 0.09);
+}
+/* Vignette par-dessus (fusion normale → le noir des bords reste visible). */
+.film-fx::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(132% 122% at 48% 46%, rgba(0,0,0,0) 58%, rgba(0,0,0,0.20) 85%, rgba(0,0,0,0.44) 100%);
+}
+
+/* ---------- Bouton accent (1 par section max) — §4 ---------- */
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.78rem;
+  color: var(--accent-text);
+  background: var(--accent);
+  padding: 0.85em 1.4em;
+  border-radius: 2px;
+  box-shadow: 0 8px 30px -8px var(--accent-glow);
+}
+
+/* Lien texte neutre (mono UPPERCASE) */
+.link-mono {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+/* ============================================================
+   Signature — marques de cadrage d'angle — §5
+   Deux équerres fines sur coins opposés (TL + BR).
+   Tracé via transform: scale() depuis le sommet (jamais width/height).
+   À l'Étape 1 on les affiche en état tracé (.is-drawn présent dans le
+   markup) : aucune transition ne se déclenche au load. Le câblage
+   d'animation (toggle au reveal / hover) arrive aux Étapes 3 & 5.
+   ============================================================ */
+.mark {
+  position: relative;
+  display: inline-block;
+}
+.mark .arm { position: absolute; background: var(--accent); }
+.mark .arm-h { width: 11px; height: 1.5px; }
+.mark .arm-v { width: 1.5px; height: 11px; }
+
+.mark.tl .arm-h { top: 0;    left: 0;   transform-origin: left;   transform: scaleX(0); }
+.mark.tl .arm-v { top: 0;    left: 0;   transform-origin: top;    transform: scaleY(0); }
+.mark.br .arm-h { bottom: 0; right: 0;  transform-origin: right;  transform: scaleX(0); }
+.mark.br .arm-v { bottom: 0; right: 0;  transform-origin: bottom; transform: scaleY(0); }
+
+/* état tracé — spécificité ≥ aux règles de base (.mark.tl .arm-h) sinon
+   les bras restent à scale(0). On cible .mark explicitement + !important
+   de secours pour les marques statiques (nav, catégories, logo…). */
+.is-drawn .mark .arm-h,
+.is-drawn.mark .arm-h { transform: scaleX(1) !important; transition: transform var(--dur-sign) var(--ease); }
+.is-drawn .mark .arm-v,
+.is-drawn.mark .arm-v { transform: scaleY(1) !important; transition: transform var(--dur-sign) var(--ease); }
+
+/* ============================================================
+   États initiaux d'animation — Étape 3
+   Appliqués uniquement quand <html> porte .js-anim (ajouté en <head>
+   si JS actif ET motion autorisé). Sans JS ou en reduced-motion, rien
+   n'est masqué : tout reste visible immédiatement.
+   ============================================================ */
+.js-anim [data-reveal] {
+  opacity: 0;
+  transform: translateY(26px);
+  /* will-change posé/retiré par le moteur le temps du reveal seulement
+     (éviter de garder 4 grands calques composités en permanence). */
+}
+.js-anim .nav { opacity: 0; transform: translateY(-100%); }
+.js-anim .hero__eyebrow,
+.js-anim .hero__desc { opacity: 0; transform: translateY(20px); }
+.js-anim .hero__title {
+  opacity: 0;
+  transform: translateY(40px);
+  clip-path: inset(0 0 100% 0);
+}
+.js-anim .hero__scroll { opacity: 0; }
+/* Titre découpé par SplitType : masqué jusqu'à la mise en place des lignes
+   (le moteur révèle le conteneur puis anime les lignes) → pas de flash. */
+.js-anim [data-split] { opacity: 0; }
+
+/* Révélation média par clip-path (volet) + scale-in de l'image intérieure. */
+.js-anim [data-clip] { clip-path: inset(0 0 100% 0); }
+.js-anim [data-clip] .clip__inner { transform: scale(1.12); }
+
+/* Mot encadré par la signature (marques de cadrage tracées au reveal).
+   Les .mark/.arm sont injectés par le moteur ; le tracé via .is-drawn. */
+.markword { position: relative; display: inline-block; }
+.markword .mark { position: absolute; width: 11px; height: 11px; }
+.markword .mark.tl { top: -0.14em; left: -0.16em; }
+.markword .mark.br { bottom: -0.14em; right: -0.16em; }
+
+/* Variante « bloc » : encadre tout le titre (coins du conteneur). Marques un
+   peu plus grandes et davantage déportées pour bien dégager le texte. */
+.markblock { position: relative; }
+.markblock .mark { position: absolute; width: 16px; height: 16px; }
+.markblock .mark.tl { top: -0.18em; left: -0.22em; }
+.markblock .mark.br { bottom: -0.18em; right: -0.22em; }
+
+/* ============================================================
+   « Prochainement » — placeholder vivant (cartes projet en attente
+   + showreel). Dégradé qui dérive/varie en continu + label mono.
+   ============================================================ */
+.coming-soon {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+.coming-soon__grad {
+  position: absolute; inset: -45%;
+  background:
+    radial-gradient(38% 48% at 28% 30%, rgba(255,30,99,0.40) 0%, rgba(20,20,28,0) 60%),
+    radial-gradient(44% 54% at 72% 66%, rgba(48,92,165,0.42) 0%, rgba(20,20,28,0) 62%),
+    radial-gradient(50% 60% at 50% 88%, rgba(255,30,99,0.18) 0%, rgba(20,20,28,0) 60%),
+    linear-gradient(140deg, #18181f 0%, #0e0e12 70%);
+  background-size: 200% 200%, 220% 220%, 200% 200%, 100% 100%;
+  filter: blur(10px) saturate(1.12);
+  animation: cs-drift 16s ease-in-out infinite alternate;
+}
+@keyframes cs-drift {
+  0%   { background-position: 0% 0%, 100% 0%, 50% 100%, 0 0; transform: scale(1.04) rotate(0deg); }
+  50%  { background-position: 60% 100%, 25% 55%, 85% 15%, 0 0; transform: scale(1.10) rotate(2deg); }
+  100% { background-position: 100% 45%, 0% 100%, 15% 80%, 0 0; transform: scale(1.06) rotate(-2deg); }
+}
+.coming-soon__label {
+  position: relative; z-index: 1;
+  font-family: var(--font-mono); font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.34em;
+  font-size: clamp(0.72rem, 1.4vw, 1rem);
+  color: var(--text);
+  padding-left: 0.34em; /* compense le letter-spacing pour recentrer */
+  text-shadow: 0 2px 20px rgba(0,0,0,0.7);
+  animation: cs-pulse 2.8s ease-in-out infinite;
+}
+@keyframes cs-pulse { 0%,100% { opacity: 0.72; } 50% { opacity: 1; } }
+
+/* Indicateur SIGNATURE : cadre à 2 coins (TL + BR) qui enveloppe l'élément
+   actif / survolé (nav, catégories…). Positionné par JS (transform + taille),
+   animé par transition CSS. */
+.sigframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+  /* La frame se POSITIONNE et se DIMENSIONNE instantanément (sinon elle
+     grossit/glisse de 0 → pleine taille, ce qui masque le tracé). Seuls les
+     traits des deux équerres se dessinent — depuis le sommet de leur angle —
+     via la transition sur .arm. Opacité quasi instantanée pour que le tracé
+     reste l'animation visible (pas un fondu superposé). */
+  transition: opacity 0.15s var(--ease);
+}
+.sigframe .mark { position: absolute; width: 10px; height: 10px; }
+.sigframe .mark.tl { top: 0; left: 0; }
+.sigframe .mark.br { bottom: 0; right: 0; }
+
+/* ============================================================
+   Transition de page — panneau sombre + liseré rose.
+   Départ : le panneau monte du bas et couvre l'écran (le temps de
+   chargement de la page suivante est masqué). Arrivée : il poursuit
+   vers le haut et révèle la nouvelle page. Piloté par js (BaseLayout) :
+   classe .pgt-enter posée en <head> AVANT le paint → aucun flash.
+   ============================================================ */
+.pgt {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  pointer-events: none;
+  /* fond profond + léger halo central + grain fin (même esprit que .bg-texture) */
+  background-color: var(--bg-deep);
+  background-image:
+    radial-gradient(115% 75% at 50% 44%, rgba(255, 255, 255, 0.045) 0%, rgba(0, 0, 0, 0) 58%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='pgtn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23pgtn)' opacity='0.07'/%3E%3C/svg%3E");
+  background-repeat: no-repeat, repeat;
+  background-size: 100% 100%, 200px 200px;
+  transform: translateY(101%); /* au repos : hors écran, en bas */
+  will-change: transform;
+}
+/* Signature discrète : repères de visée (équerres) au centre du panneau.
+   Apparaissent en fondu quand il couvre, s'effacent pendant la révélation. */
+.pgt__sign {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 88px;
+  height: 88px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+}
+.pgt__sign .mark { position: absolute; width: 20px; height: 20px; }
+.pgt__sign .mark.tl { top: 0; left: 0; }
+.pgt__sign .mark.br { bottom: 0; right: 0; }
+/* équerres tracées (on l'emporte sur l'état scale(0) de base) + bras rallongés */
+.pgt__sign .mark.tl .arm-h,
+.pgt__sign .mark.br .arm-h { width: 20px; height: 2px; transform: scaleX(1); }
+.pgt__sign .mark.tl .arm-v,
+.pgt__sign .mark.br .arm-v { width: 2px; height: 20px; transform: scaleY(1); }
+.pgt.is-covering .pgt__sign { opacity: 0.55; transition-delay: 0.1s; }
+.pgt-enter .pgt__sign { opacity: 0.55; animation: pgt-sign-out 0.55s var(--ease) forwards; }
+@keyframes pgt-sign-out { 0%, 35% { opacity: 0.55; } 100% { opacity: 0; } }
+/* liserés rose sur les deux bords (celui qui touche la page est visible) */
+.pgt::before,
+.pgt::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 20px 1px rgba(255, 30, 99, 0.5);
+}
+.pgt::before { top: 0; }
+.pgt::after { bottom: 0; }
+/* départ : couvre en montant (accélère). !important pour l'emporter même
+   si l'animation d'arrivée n'est pas encore nettoyée (clic ultra-rapide). */
+.pgt.is-covering {
+  transition: transform 0.42s cubic-bezier(0.5, 0, 0.75, 0);
+  transform: translateY(0) !important;
+}
+/* arrivée : le panneau couvre déjà (posé en <head>) puis se retire vers le haut */
+.pgt-enter .pgt {
+  transform: translateY(0);
+  animation: pgt-reveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes pgt-reveal { to { transform: translateY(-101%); } }
+
+/* ============================================================
+   Accessibilité — prefers-reduced-motion (CSS).
+   Le pendant JS (pas de Lenis, pas de scrub) arrivera à l'Étape 3.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+  .pgt { display: none; }
+}

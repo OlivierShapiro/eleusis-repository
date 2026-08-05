@@ -1,0 +1,205 @@
+---
+/**
+ * Projet en plein écran (style Outline) — média pleine largeur, edge-to-edge,
+ * empilé verticalement comme une bobine cinématographique.
+ * Remplace les cartes sur la page d'accueil (demande client).
+ *
+ * Médias : props `video` (.webm) + `poster` optionnels. Tant qu'aucun
+ * asset n'est fourni → poster placeholder généré (dégradé). Drop-in du
+ * vrai média plus tard sans rien changer d'autre.
+ *
+ * Chorégraphie hover (≤3) : média scale + bascule de filtre · tracé des
+ * marques de cadrage · (les infos restent visibles, légère emphase).
+ * transform/filter/opacity only. Textes = PLACEHOLDERS.
+ */
+interface Props {
+  client: string;
+  type: string;
+  index: string;
+  total: string;
+  href?: string;
+  video?: string;
+  poster?: string;
+  height?: string;   // hauteur du média, ex "88vh"
+  mediaLabel?: string; // libellé du placeholder (ex. "VIDÉO" ou "IMAGE")
+  image?: string;    // chemin image (si pas de vidéo) — ex "/images/accueil-01.jpg"
+  interactive?: boolean; // false = image pure (pas de lien, pas d'effet au survol)
+  showCount?: boolean;   // affiche "N°x / y" (défaut true)
+}
+const {
+  client,
+  type,
+  index,
+  total,
+  showCount = true,
+  href = "/projets",
+  video,
+  poster,
+  height = "88vh",
+  mediaLabel = "VIDÉO",
+  image,
+  interactive = true,
+} = Astro.props;
+---
+
+<a
+  class:list={["feature", { "feature--static": !interactive }]}
+  href={interactive ? href : undefined}
+  style={`--feat-h:${height}`}
+  aria-label={interactive ? `${client}, ${type}` : undefined}
+  data-reveal
+>
+  <div class="feature__media">
+    <!-- wrapper parallax (translateY au scroll) : distinct de la couche
+         média qui porte le scale au hover, pour éviter le conflit transform. -->
+    <div class="feature__parallax">
+      {video ? (
+        <video class="feature__layer" muted loop playsinline preload="metadata" poster={poster}>
+          <source src={video} type="video/webm" />
+        </video>
+      ) : image ? (
+        <img class="feature__layer" src={image} alt={client} loading="lazy" />
+      ) : (
+        <div class="feature__layer feature__ph" aria-hidden="true">
+          <span class="label feature__ph-label">[ {mediaLabel} {index} ]</span>
+        </div>
+      )}
+    </div>
+
+    <div class="feature__scrim" aria-hidden="true"></div>
+
+    <!-- signature : marques de cadrage tracées au hover -->
+    <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+    <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+  </div>
+
+  <div class="feature__info container">
+    {showCount && <span class="count">N°{index} / {total}</span>}
+    <span class="feature__client">{client}</span>
+    <span class="feature__type">{type}</span>
+  </div>
+</a>
+
+<style>
+  .feature {
+    display: block;
+    position: relative;
+    width: 100%;
+    height: var(--feat-h);
+    overflow: hidden;
+    background: #0f0f11;
+  }
+
+  .feature__media { position: absolute; inset: 0; }
+
+  /* Boîte parallax : déborde de 10% en haut/bas → la translation au scroll
+     (±6%) ne révèle jamais de vide. Au repos (reduced-motion), centrée. */
+  .feature__parallax {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -10%;
+    height: 120%;
+  }
+
+  /* Média (vidéo ou placeholder) — repos filtré, hover éclairci.
+     transform/filter only → composité GPU, pas de reflow. */
+  .feature__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: saturate(0.72) brightness(0.6);
+    transform: scale(1);
+    transition:
+      transform var(--dur-reveal) var(--ease),
+      filter var(--dur-reveal) var(--ease);
+  }
+  .feature__ph {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(120% 100% at 72% -10%, rgba(40,70,120,0.40) 0%, rgba(20,20,28,0) 55%),
+      radial-gradient(90% 90% at 12% 115%, rgba(255,30,99,0.08) 0%, rgba(20,20,28,0) 55%),
+      linear-gradient(155deg, #1a1a22 0%, #131318 60%, #0e0e12 100%);
+  }
+  .feature__ph-label { color: var(--text-faint); letter-spacing: 0.24em; }
+
+  .feature__scrim {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(to top, rgba(15,15,17,0.92) 0%, rgba(15,15,17,0) 55%);
+  }
+
+  /* Marques de cadrage — repos scale 0, tracées au hover. */
+  .feature__media .mark { position: absolute; width: 14px; height: 14px; z-index: 3; }
+  .feature__media .mark.tl { top: clamp(18px, 3vw, 32px); left: clamp(18px, 3vw, 32px); }
+  .feature__media .mark.br { bottom: clamp(18px, 3vw, 32px); right: clamp(18px, 3vw, 32px); }
+
+  .feature__info {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: clamp(28px, 5vh, 64px);
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45em;
+    pointer-events: none;
+  }
+  .feature__client {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+    line-height: 0.9;
+    font-size: clamp(2.6rem, 7vw, 6rem);
+    color: var(--text);
+    transform: translateY(0);
+    transition: transform var(--dur-reveal) var(--ease);
+  }
+  .feature__type {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  /* — HOVER — */
+  .feature:hover .feature__layer,
+  .feature:focus-visible .feature__layer {
+    transform: scale(1.04);
+    filter: saturate(1) brightness(0.78);
+  }
+  .feature:hover .feature__client,
+  .feature:focus-visible .feature__client {
+    transform: translateY(-6px);
+  }
+  .feature:hover .mark .arm-h,
+  .feature:focus-visible .mark .arm-h {
+    transform: scaleX(1);
+    transition: transform var(--dur-sign) var(--ease);
+  }
+  .feature:hover .mark .arm-v,
+  .feature:focus-visible .mark .arm-v {
+    transform: scaleY(1);
+    transition: transform var(--dur-sign) var(--ease);
+  }
+
+  /* Image pure (accueil) : aucun mouvement au survol, pas de signature, pas de lien. */
+  .feature--static { cursor: default; }
+  .feature--static .mark { display: none; }
+  .feature--static:hover .feature__layer,
+  .feature--static:focus-visible .feature__layer {
+    transform: none;
+    filter: saturate(0.72) brightness(0.6);
+  }
+  .feature--static:hover .feature__client,
+  .feature--static:focus-visible .feature__client { transform: none; }
+  .feature--static:hover .feature__scrim,
+  .feature--static:focus-visible .feature__scrim { opacity: 1; }
+</style>

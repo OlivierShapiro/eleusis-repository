@@ -1,0 +1,181 @@
+---
+/**
+ * Layout global — head, polices, méta/SEO, grain, Nav + Footer.
+ * Marque complète « Eleusis » dans <title> + méta (SEO/reconnaissance).
+ */
+import "../styles/global.css";
+import Nav from "../components/Nav.astro";
+import Footer from "../components/Footer.astro";
+import MotionEngine from "../components/MotionEngine.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+  active?: string;
+}
+const {
+  title = "Eleusis, production vidéo en Suisse romande",
+  description =
+    "Eleusis, réalisation et production vidéo en Suisse romande. Films de marque, social, productions premium.",
+  active = "",
+} = Astro.props;
+
+// URLs absolues pour le SEO (Astro.site défini dans astro.config.mjs).
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const ogImage = new URL("/og.jpg", Astro.site).href; // image à fournir : public/og.jpg
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta name="theme-color" content="#121214" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Masque les éléments à animer AVANT le paint (pas de flash), seulement
+         si JS actif et motion autorisé. Le moteur (fin de body) prend le relais. -->
+    <script is:inline>
+      if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        document.documentElement.classList.add("js-anim");
+      }
+      // Transition de page : si on arrive via un clic interne, on marque <html>
+      // AVANT le paint pour que le panneau couvre l'écran (aucun flash), puis
+      // il se retire (animation CSS pgt-reveal). Voir global.css + script bas de page.
+      try {
+        if (sessionStorage.getItem("pgt")) {
+          sessionStorage.removeItem("pgt");
+          if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            document.documentElement.classList.add("pgt-enter");
+          }
+        }
+      } catch (e) {}
+    </script>
+
+    <!-- Open Graph / SEO (image OG à fournir : public/og.jpg, 1200×630) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="Eleusis" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Polices : Encode Sans Expanded (titres) + IBM Plex Mono (corps) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Encode+Sans+Expanded:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">Aller au contenu</a>
+    <div class="pgt" aria-hidden="true">
+      <span class="pgt__sign">
+        <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+        <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+      </span>
+    </div>
+    <div class="bg-texture" aria-hidden="true"></div>
+    <div class="top-scrim" aria-hidden="true"></div>
+    <Nav active={active} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+    <MotionEngine />
+
+    <!-- ===== Transition de page (panneau + liseré rose) ===== -->
+    <script is:inline>
+      (function () {
+        var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var panel = document.querySelector(".pgt");
+        if (!panel || reduce) return;
+        var html = document.documentElement;
+
+        // Arrivée : le panneau couvre déjà (classe posée en <head>) et se retire
+        // via l'animation CSS. On retire la classe une fois l'animation finie →
+        // le panneau revient au repos (en bas), prêt pour la prochaine couverture.
+        if (html.classList.contains("pgt-enter")) {
+          var cleared = false;
+          var clear = function () {
+            if (cleared) return;
+            cleared = true;
+            html.classList.remove("pgt-enter");
+          };
+          panel.addEventListener("animationend", clear, { once: true });
+          setTimeout(clear, 900); // filet : si animationend manque (onglet en arrière-plan…)
+        }
+
+        // Retourne l'URL si le lien est interne et « navigable » (sinon null).
+        function internalLink(a) {
+          if (!a || a.target === "_blank" || a.hasAttribute("download")) return null;
+          var href = a.getAttribute("href");
+          if (!href || href.charAt(0) === "#") return null;
+          if (href.indexOf("mailto:") === 0 || href.indexOf("tel:") === 0) return null;
+          var url;
+          try { url = new URL(href, location.href); } catch (e) { return null; }
+          if (url.origin !== location.origin) return null;
+          return url;
+        }
+
+        // Prefetch au survol : la page suivante charge pendant qu'on vise le lien.
+        var seen = {};
+        document.addEventListener("mouseover", function (e) {
+          var a = e.target.closest ? e.target.closest("a") : null;
+          var url = internalLink(a);
+          if (!url || url.pathname === location.pathname || seen[url.href]) return;
+          seen[url.href] = 1;
+          var l = document.createElement("link");
+          l.rel = "prefetch";
+          l.href = url.href;
+          document.head.appendChild(l);
+        });
+
+        // Départ : couvre l'écran puis navigue (dès la fin de la couverture).
+        var leaving = false;
+        document.addEventListener("click", function (e) {
+          if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          var a = e.target.closest ? e.target.closest("a") : null;
+          var url = internalLink(a);
+          if (!url) return;
+          if (url.pathname === location.pathname && url.search === location.search) return; // même page
+          e.preventDefault();
+          if (leaving) return;
+          leaving = true;
+          try { sessionStorage.setItem("pgt", "1"); } catch (er) {}
+          panel.classList.add("is-covering");
+          var done = false;
+          var go = function () { if (done) return; done = true; location.href = url.href; };
+          panel.addEventListener("transitionend", go, { once: true });
+          setTimeout(go, 520); // filet de sécurité si transitionend manque
+        });
+
+        // Retour arrière / restauration depuis le bfcache : la page quittée avait
+        // pu rester « couverte » (is-covering) avec la navigation verrouillée
+        // (leaving = true). Le listener survit dans le bfcache et se déclenche à
+        // la restauration → on remet le panneau au repos et on réarme les clics.
+        // Garde `persisted` : une arrivée normale (pgt-enter) n'est pas touchée,
+        // son animation de révélation se joue sans interruption.
+        window.addEventListener("pageshow", function (e) {
+          if (!e.persisted) return;
+          leaving = false;
+          panel.classList.remove("is-covering");
+          html.classList.remove("pgt-enter");
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,285 @@
+---
+/**
+ * Nav globale (FOCUS_PLAN_PAGES §A).
+ * Desktop : liens + CTA. Mobile (≤760px) : burger → menu plein écran
+ * (liens empilés, reveal en cascade). Drop-in au load via MotionEngine.
+ */
+import FrameMarks from "./FrameMarks.astro";
+
+interface Props {
+  active?: string;
+}
+const { active = "" } = Astro.props;
+
+const links = [
+  { label: "Projets", href: "/projets" },
+  { label: "Process", href: "/process" },
+  { label: "À propos", href: "/a-propos" },
+  { label: "Contact", href: "/contact" },
+];
+---
+
+<header class="nav">
+  <div class="container nav__inner">
+    <a class="nav__logo" href="/" aria-label="ELEUSIS, accueil">
+      <FrameMarks pad={7} drawn={false} class={active === "/" ? "is-home" : ""}><span class="nav__wordmark">ELEUSIS</span></FrameMarks>
+    </a>
+
+    <nav class="nav__links" aria-label="Navigation principale">
+      {links.map((l) => (
+        <a
+          class:list={["nav__link", { "is-active": active === l.href }]}
+          href={l.href}
+          aria-current={active === l.href ? "page" : undefined}
+        >
+          {l.label}
+        </a>
+      ))}
+      <span class="sigframe" aria-hidden="true">
+        <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+        <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+      </span>
+    </nav>
+
+    <a class="btn-accent nav__cta" href="/contact">Démarrer un projet</a>
+
+    <button
+      class="nav__burger"
+      type="button"
+      aria-label="Ouvrir le menu"
+      aria-expanded="false"
+      aria-controls="mobile-menu"
+    >
+      <span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<!-- Menu plein écran (mobile) -->
+<div class="nav__overlay" id="mobile-menu">
+  <nav class="nav__overlay-inner" aria-label="Menu mobile">
+    {links.map((l) => (
+      <a
+        class:list={["nav__overlay-link", { "is-active": active === l.href }]}
+        href={l.href}
+        aria-current={active === l.href ? "page" : undefined}
+      >
+        {l.label}
+      </a>
+    ))}
+    <a class="btn-accent nav__overlay-cta" href="/contact">Démarrer un projet</a>
+  </nav>
+</div>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    height: var(--nav-h);
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transition:
+      background var(--dur-sign) var(--ease),
+      backdrop-filter var(--dur-sign) var(--ease),
+      border-color var(--dur-sign) var(--ease);
+  }
+  /* Au scroll : fond flou pour la lisibilité (+ texte légèrement éclairci). */
+  .nav.is-scrolled {
+    background: rgba(16, 16, 20, 0.55);
+    backdrop-filter: blur(14px) saturate(1.3);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    border-bottom-color: var(--line);
+  }
+  .nav.is-scrolled .nav__link { color: var(--text); }
+  .nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(16px, 4vw, 48px);
+  }
+  .nav__wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 1.05rem;
+    line-height: 1;
+  }
+  .nav__links {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: clamp(18px, 2.6vw, 40px);
+    margin-left: auto;
+    margin-right: clamp(18px, 3vw, 44px);
+  }
+  .nav__link {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    position: relative;
+    transition: color var(--dur-sign) var(--ease);
+  }
+  .nav__link:hover { color: var(--text); }
+  .nav__link.is-active { color: var(--text); }
+  .nav__cta { white-space: nowrap; }
+
+  /* ---- Burger ---- */
+  .nav__burger {
+    display: none;
+    width: 40px;
+    height: 40px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-left: auto;
+  }
+  .nav__burger span {
+    display: block;
+    width: 24px;
+    height: 1.5px;
+    background: var(--text);
+    transition: transform var(--dur-sign) var(--ease), opacity var(--dur-sign) var(--ease);
+  }
+  .nav__burger[aria-expanded="true"] span:first-child {
+    transform: translateY(3.75px) rotate(45deg);
+  }
+  .nav__burger[aria-expanded="true"] span:last-child {
+    transform: translateY(-3.75px) rotate(-45deg);
+  }
+
+  /* ---- Overlay menu plein écran ---- */
+  .nav__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: var(--bg-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s var(--ease), visibility 0.4s var(--ease);
+  }
+  .nav__overlay.is-open { opacity: 1; visibility: visible; }
+  .nav__overlay-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(20px, 4vh, 36px);
+  }
+  .nav__overlay-link {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: clamp(2rem, 9vw, 3.4rem);
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  }
+  .nav__overlay-link.is-active { color: var(--accent); }
+  .nav__overlay-cta {
+    margin-top: 1em;
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+  }
+  /* Cascade à l'ouverture */
+  .nav__overlay.is-open .nav__overlay-link,
+  .nav__overlay.is-open .nav__overlay-cta {
+    opacity: 1;
+    transform: none;
+  }
+  .nav__overlay.is-open .nav__overlay-link:nth-child(1) { transition-delay: 0.08s; }
+  .nav__overlay.is-open .nav__overlay-link:nth-child(2) { transition-delay: 0.14s; }
+  .nav__overlay.is-open .nav__overlay-link:nth-child(3) { transition-delay: 0.20s; }
+  .nav__overlay.is-open .nav__overlay-link:nth-child(4) { transition-delay: 0.26s; }
+  .nav__overlay.is-open .nav__overlay-cta { transition-delay: 0.34s; }
+
+  @media (max-width: 760px) {
+    .nav__links,
+    .nav__cta { display: none; }
+    .nav__burger { display: flex; }
+  }
+</style>
+
+<script is:inline>
+  (function () {
+    const burger = document.querySelector(".nav__burger");
+    const overlay = document.getElementById("mobile-menu");
+    if (!burger || !overlay) return;
+
+    function setOpen(open) {
+      burger.setAttribute("aria-expanded", String(open));
+      burger.setAttribute("aria-label", open ? "Fermer le menu" : "Ouvrir le menu");
+      overlay.classList.toggle("is-open", open);
+      document.body.style.overflow = open ? "hidden" : "";
+      // Stoppe le smooth-scroll Lenis tant que le menu est ouvert.
+      if (window.lenis) open ? window.lenis.stop() : window.lenis.start();
+    }
+
+    burger.addEventListener("click", () => {
+      setOpen(burger.getAttribute("aria-expanded") !== "true");
+    });
+    overlay.querySelectorAll("a").forEach((a) =>
+      a.addEventListener("click", () => setOpen(false))
+    );
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") setOpen(false);
+    });
+
+    // --- Signature sur le logo ELEUSIS : uniquement sur la page d'accueil,
+    //     et elle se TRACE (les deux équerres se déploient depuis le coin). ---
+    const logoFrame = document.querySelector(".nav__logo .framed.is-home");
+    if (logoFrame) {
+      // léger délai pour que le tracé suive la descente de la nav au load
+      setTimeout(() => logoFrame.classList.add("is-drawn"), 600);
+    }
+
+    // --- Indicateur signature (cadre 2 coins) sur le lien actif / survolé ---
+    const linksWrap = document.querySelector(".nav__links");
+    const frame = linksWrap && linksWrap.querySelector(".sigframe");
+    if (linksWrap && frame) {
+      const links = Array.prototype.slice.call(linksWrap.querySelectorAll(".nav__link"));
+      const active = linksWrap.querySelector(".nav__link.is-active");
+      const PAD = 9;
+      function place(el) {
+        if (!el) { frame.style.opacity = "0"; frame.classList.remove("is-drawn"); return; }
+        frame.style.opacity = "1";
+        frame.style.transform = "translate(" + (el.offsetLeft - PAD) + "px," + (el.offsetTop - PAD) + "px)";
+        frame.style.width = el.offsetWidth + PAD * 2 + "px";
+        frame.style.height = el.offsetHeight + PAD * 2 + "px";
+        // (re)trace les équerres à chaque verrouillage (effet de visée)
+        frame.classList.remove("is-drawn");
+        void frame.offsetWidth; // reflow → réinitialise le tracé
+        frame.classList.add("is-drawn");
+      }
+      const placeActive = () => place(active);
+      links.forEach((l) => l.addEventListener("mouseenter", () => place(l)));
+      linksWrap.addEventListener("mouseleave", placeActive);
+      placeActive();
+      window.addEventListener("resize", placeActive);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(placeActive);
+    }
+
+    // --- Fond flou de la nav au scroll ---
+    const navEl = document.querySelector(".nav");
+    if (navEl) {
+      const onScroll = () => {
+        if ((window.scrollY || 0) > 40) navEl.classList.add("is-scrolled");
+        else navEl.classList.remove("is-scrolled");
+      };
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+    }
+  })();
+</script>

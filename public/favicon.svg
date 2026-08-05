@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" fill="#121214"/>
+  <!-- marque de cadrage TL -->
+  <path d="M5 5 H14 M5 5 V14" stroke="#FF1E63" stroke-width="2" fill="none"/>
+  <!-- marque de cadrage BR -->
+  <path d="M27 27 H18 M27 27 V18" stroke="#FF1E63" stroke-width="2" fill="none"/>
+  <!-- point central -->
+  <circle cx="16" cy="16" r="2" fill="#fff"/>
+</svg>

@@ -1,0 +1,80 @@
+---
+/**
+ * Planche de souvenirs « désorganisée » (scatter), réutilisable.
+ * Le CONTENU vient de src/data/souvenirs.ts (commun à toutes les pages) ;
+ * la DISPOSITION est fournie par la page via `layout` → chaque page a un
+ * agencement différent tout en montrant le même contenu.
+ * Mouvement au scroll : [data-parallax] (géré par MotionEngine).
+ */
+import { souvenirs } from "../data/souvenirs";
+
+interface Slot {
+  t: string; // top %
+  l: string; // left %
+  w: string; // largeur (clamp)
+  r: string; // rotation
+  cap: string; // texte de la légende (propre à chaque page)
+  align: "left" | "right"; // alignement de la légende
+  p: number; // amplitude parallaxe (sens = signe)
+}
+interface Props {
+  layout: Slot[];
+  height?: string;
+}
+const { layout, height = "clamp(540px, 62vw, 780px)" } = Astro.props;
+---
+
+<div class="sv-stage" style={`--sv-h:${height}`}>
+  {souvenirs.map((s, i) => {
+    const slot = layout[i] || layout[layout.length - 1];
+    return (
+      <figure
+        class="sv-item"
+        data-parallax={slot.p}
+        data-cap={slot.align}
+        style={`--t:${slot.t};--l:${slot.l};--w:${slot.w}`}
+      >
+        <figcaption class="sv-cap">{slot.cap}</figcaption>
+        <div class="sv-photo" style={`--r:${slot.r};--ar:${s.ar}`}>
+          <div class="media-ph" aria-hidden="true">
+            <span class="media-ph__label label">[ {s.img} ]</span>
+          </div>
+          <img src={`/images/souvenirs/${s.img}.webp`} alt="" loading="lazy" onerror="this.style.display='none'" />
+        </div>
+      </figure>
+    );
+  })}
+</div>
+
+<style>
+  .sv-stage { position: relative; height: var(--sv-h); }
+  .sv-item { position: absolute; top: var(--t); left: var(--l); width: var(--w); z-index: 1; }
+  .sv-item:hover { z-index: 6; }
+  .sv-cap {
+    display: block; font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.14em; font-size: 0.66rem; color: var(--text-muted); margin-bottom: 0.8em;
+  }
+  .sv-item[data-cap="right"] { text-align: right; }
+  .sv-photo {
+    position: relative; aspect-ratio: var(--ar, 4 / 5); overflow: hidden; border-radius: 2px;
+    background: var(--bg-deep); transform: rotate(var(--r, 0deg));
+    box-shadow: 0 26px 60px -30px rgba(0,0,0,0.8); transition: transform var(--dur-reveal) var(--ease);
+  }
+  .sv-item:hover .sv-photo { transform: rotate(0deg) scale(1.04); }
+  .sv-photo img, .sv-photo .media-ph { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .sv-photo img { object-fit: cover; }
+  .sv-photo .media-ph {
+    display: grid; place-items: center;
+    background:
+      radial-gradient(120% 100% at 72% -10%, rgba(48,92,165,0.40) 0%, rgba(20,20,28,0) 58%),
+      linear-gradient(155deg, #1a1a22 0%, #131318 60%, #0e0e12 100%);
+  }
+  .sv-photo .media-ph__label { color: var(--text-faint); letter-spacing: 0.24em; }
+
+  @media (max-width: 760px) {
+    .sv-stage { height: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .sv-item { position: static; width: auto !important; transform: none !important; }
+    .sv-item[data-cap="right"] { text-align: left; }
+    .sv-photo { transform: none !important; }
+  }
+</style>

@@ -1,0 +1,377 @@
+---
+/**
+ * Contact (FOCUS_PLAN_PAGES §6). Formulaire créatif : champs soulignés, la
+ * signature (2 coins) se trace au focus ; type de projet & budget en chips ;
+ * bouton magnétique ; état « envoyé ». Câblage backend = à définir (placeholder).
+ * Contenus = PLACEHOLDERS.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+// Types de VIDÉO (pas les formules).
+const types = ["Documentaire", "Brand Film", "Publicité", "Corporate", "Autre"];
+const socials = [
+  { label: "Instagram", href: "https://www.instagram.com/oliviershapiro/" },
+  { label: "YouTube", href: "https://www.youtube.com/@oliviershapiro" },
+];
+
+// Réception des e-mails : Web3Forms (même outil que l'ancien site).
+// ⚠️ Remplacer par TA clé d'accès Web3Forms (https://web3forms.com).
+const WEB3FORMS_KEY = "87fad120-6674-4595-bcf2-c95ca4ab1acb";
+---
+
+<BaseLayout
+  title="Contact · Eleusis"
+  description="Parlons de votre projet vidéo. Eleusis, Suisse romande."
+  active="/contact"
+>
+  <!-- ============ EN-TÊTE ============ -->
+  <section class="ct-head">
+    <div class="container">
+      <p class="label label--accent" data-reveal>// Contact</p>
+      <h1 class="ct-head__title" data-split data-frameword>Parlons-en</h1>
+      <p class="ct-head__sub text-muted" data-reveal>
+        Lorem ipsum, réponse sous [DÉLAI].
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ FORMULAIRE + INFOS ============ -->
+  <section class="ct-main">
+    <div class="container ct-main__grid">
+      <!-- Formulaire -->
+      <form class="ct-form" id="ct-form" novalidate>
+        <!-- Web3Forms : champs cachés (clé à renseigner) + honeypot anti-spam -->
+        <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
+        <input type="hidden" name="subject" value="Nouveau message · Eleusis" />
+        <input type="checkbox" name="botcheck" class="ct-hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+        <div class="ct-row">
+          <label class="field" data-reveal>
+            <span class="field__label">Nom</span>
+            <input class="field__input" type="text" name="nom" autocomplete="name" placeholder="Votre nom" required />
+            <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+            <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          </label>
+          <label class="field" data-reveal>
+            <span class="field__label">Email</span>
+            <input class="field__input" type="email" name="email" autocomplete="email" placeholder="vous@exemple.com" required />
+            <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+            <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          </label>
+        </div>
+
+        <fieldset class="chips" data-reveal>
+          <legend class="field__label">Type de projet</legend>
+          <div class="chips__row">
+            {types.map((t, i) => (
+              <label class="chip">
+                <input type="radio" name="type" value={t} checked={i === 0} />
+                <span>{t}</span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
+
+        <label class="field field--area" data-reveal>
+          <span class="field__label">Message</span>
+          <textarea class="field__input" name="message" rows="4" placeholder="Parlez-nous de votre projet…" required></textarea>
+          <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+        </label>
+
+        <div class="ct-submit" data-reveal>
+          <button class="btn-accent ct-send" type="submit" data-magnetic>Envoyer →</button>
+          <p class="ct-error count" id="ct-error" hidden>Une erreur est survenue. Réessayez ou écrivez-nous directement.</p>
+        </div>
+      </form>
+
+      <!-- Coordonnées -->
+      <aside class="ct-info">
+        <p class="label label--accent" data-reveal>// Coordonnées</p>
+        <a class="ct-info__email" href="mailto:contact.focusvideaste@gmail.com" data-reveal>contact.focusvideaste@gmail.com</a>
+        <p class="ct-info__loc text-muted" data-reveal>Based in Switzerland</p>
+
+        <div class="ct-info__block" data-reveal>
+          <p class="label">Réseaux</p>
+          <ul class="ct-info__socials">
+            {socials.map((s) => (
+              <li><a href={s.href} target="_blank" rel="noopener noreferrer">{s.label}</a></li>
+            ))}
+          </ul>
+        </div>
+
+        <div class="ct-info__block" data-reveal>
+          <p class="label">Disponibilité</p>
+          <p class="text-muted">Réponse sous [DÉLAI].</p>
+        </div>
+
+        <div class="ct-photos" data-reveal>
+          <figure class="ct-photo ct-photo--1">
+            <div class="media-ph"><span class="media-ph__label label">[ PHOTO ]</span></div>
+            <img src="/images/contact/contact-01.webp" alt="" loading="lazy" onerror="this.style.display='none'" />
+          </figure>
+          <figure class="ct-photo ct-photo--2">
+            <div class="media-ph"><span class="media-ph__label label">[ PHOTO ]</span></div>
+            <img src="/images/contact/contact-02.jpg" alt="" loading="lazy" onerror="this.style.display='none'" />
+          </figure>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Overlay de confirmation (apparaît ~2s par-dessus la page, puis disparaît) -->
+  <div class="ct-overlay" id="ct-overlay" hidden aria-live="polite">
+    <div class="ct-overlay__card">
+      <span class="mark tl is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+      <span class="mark br is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+      <p class="ct-overlay__big">Merci.</p>
+      <p class="ct-overlay__sub">Votre message a bien été envoyé, on revient vers vous au plus vite.</p>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  /* ---------- En-tête ---------- */
+  .ct-head {
+    background:
+      radial-gradient(60% 46% at 22% 50%, rgba(48,92,165,0.18) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-top: calc(var(--nav-h) + clamp(48px, 10vh, 130px));
+    padding-bottom: clamp(36px, 6vw, 80px);
+  }
+  .ct-head__title { font-size: clamp(3.5rem, 13vw, 10rem); letter-spacing: 0.01em; margin-top: 0.1em; }
+  .ct-head__sub { margin-top: 1.2em; font-size: 0.95rem; }
+
+  /* ---------- Corps ---------- */
+  .ct-main {
+    background:
+      radial-gradient(55% 46% at 100% 50%, rgba(52,98,175,0.16) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-block: clamp(40px, 7vw, 90px) clamp(80px, 13vw, 180px);
+  }
+  .ct-main__grid {
+    display: grid;
+    grid-template-columns: 1.5fr 0.8fr;
+    gap: clamp(40px, 7vw, 110px);
+    align-items: start;
+  }
+  @media (max-width: 860px) { .ct-main__grid { grid-template-columns: 1fr; } }
+
+  /* ---------- Champs ---------- */
+  .ct-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 48px); }
+  @media (max-width: 560px) { .ct-row { grid-template-columns: 1fr; } }
+
+  .ct-form { display: flex; flex-direction: column; gap: clamp(28px, 4vw, 44px); }
+
+  .field { position: relative; display: block; }
+  .field__label {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-bottom: 0.8em;
+  }
+  .field__input {
+    width: 100%;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line-strong);
+    padding: 0.6em 0.2em;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    transition: border-color var(--dur-sign) var(--ease);
+    resize: vertical;
+  }
+  .field__input::placeholder { color: var(--text-faint); }
+  .field__input:focus { outline: none; border-color: var(--accent-border); }
+  /* Autofill navigateur (email/nom enregistrés) : on neutralise le fond blanc.
+     La transition « infinie » sur background-color empêche le fond d'autofill
+     de se peindre → le champ reste transparent (texture visible) + texte clair. */
+  .field__input:-webkit-autofill,
+  .field__input:-webkit-autofill:hover,
+  .field__input:-webkit-autofill:focus,
+  .field__input:-webkit-autofill:active {
+    -webkit-text-fill-color: var(--text);
+    caret-color: var(--text);
+    -webkit-box-shadow: none;
+    transition: background-color 600000s 0s, color 600000s 0s,
+                border-color var(--dur-sign) var(--ease);
+  }
+  .field__input:autofill { -webkit-text-fill-color: var(--text); }
+
+  /* signature : marques de cadrage tracées au focus du champ */
+  .field .mark { position: absolute; width: 12px; height: 12px; pointer-events: none; }
+  .field .mark.tl { top: 1.9em; left: -6px; }
+  .field .mark.br { bottom: -6px; right: -6px; }
+  .field:focus-within .mark .arm-h { transform: scaleX(1); transition: transform var(--dur-sign) var(--ease); }
+  .field:focus-within .mark .arm-v { transform: scaleY(1); transition: transform var(--dur-sign) var(--ease); }
+
+  /* ---------- Chips (type / budget) ---------- */
+  .chips { border: 0; padding: 0; margin: 0; }
+  .chips__row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .chip span {
+    display: inline-block;
+    padding: 0.6em 1.1em;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease);
+  }
+  .chip span:hover { color: var(--text); }
+  .chip input:checked + span { color: var(--text); border-color: var(--accent-border); }
+  .chip input:focus-visible + span { outline: 2px solid var(--accent-border); outline-offset: 2px; }
+
+  /* ---------- Submit ---------- */
+  .ct-submit { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; margin-top: 0.4em; }
+  .ct-send { will-change: transform; }
+  .ct-error { color: var(--accent); }
+  /* honeypot anti-spam (caché aux humains) */
+  .ct-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+  /* ---------- Overlay de confirmation ---------- */
+  .ct-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    display: grid; place-items: center;
+    background: rgba(8, 8, 11, 0.82);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.5s var(--ease);
+  }
+  .ct-overlay[hidden] { display: none; }
+  .ct-overlay.is-on { opacity: 1; pointer-events: auto; }
+  .ct-overlay__card {
+    position: relative;
+    text-align: center;
+    padding: clamp(26px, 5vw, 54px);
+    transform: translateY(16px);
+    transition: transform 0.6s var(--ease);
+  }
+  .ct-overlay.is-on .ct-overlay__card { transform: none; }
+  .ct-overlay__card .mark { position: absolute; width: 16px; height: 16px; }
+  .ct-overlay__card .mark.tl { top: 0; left: 0; }
+  .ct-overlay__card .mark.br { bottom: 0; right: 0; }
+  .ct-overlay__big {
+    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(2.8rem, 9vw, 6rem); line-height: 0.9; color: var(--text);
+  }
+  .ct-overlay__sub {
+    margin: 1em auto 0; max-width: 40ch;
+    font-family: var(--font-mono); color: var(--text-muted);
+    font-size: clamp(0.92rem, 1.4vw, 1.08rem);
+  }
+
+  /* ---------- Infos ---------- */
+  .ct-info { display: flex; flex-direction: column; gap: clamp(20px, 3vw, 32px); }
+  .ct-info__email {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(0.82rem, 1.5vw, 1.05rem);
+    color: var(--text);
+    line-height: 1.3;
+    white-space: nowrap;
+    transition: color var(--dur-sign) var(--ease);
+  }
+  .ct-info__email:hover { color: var(--accent); }
+  .ct-info__loc { font-family: var(--font-mono); font-size: 0.95rem; }
+  .ct-info__block .label { margin-bottom: 0.9em; }
+  .ct-info__socials { display: flex; flex-direction: column; gap: 0.6em; }
+  .ct-info__socials a {
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    transition: color var(--dur-sign) var(--ease);
+  }
+  .ct-info__socials a:hover { color: var(--text); }
+
+  /* Photos (petit collage dans la colonne infos) */
+  .media-ph {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    background:
+      radial-gradient(120% 100% at 72% -10%, rgba(48,92,165,0.40) 0%, rgba(20,20,28,0) 58%),
+      linear-gradient(155deg, #1a1a22 0%, #131318 60%, #0e0e12 100%);
+  }
+  .media-ph__label { color: var(--text-faint); letter-spacing: 0.2em; font-size: 0.6rem; }
+  .ct-photos { position: relative; margin-top: clamp(8px, 2vw, 20px); height: clamp(220px, 26vw, 300px); }
+  .ct-photo {
+    position: absolute; margin: 0; overflow: hidden; border-radius: 2px;
+    width: 62%; aspect-ratio: 4 / 5; background: var(--bg-deep);
+    box-shadow: 0 26px 60px -30px rgba(0,0,0,0.8);
+  }
+  .ct-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .ct-photo--1 { top: 0; left: 0; transform: rotate(-4deg); z-index: 2; }
+  .ct-photo--2 { bottom: 0; right: 0; transform: rotate(4deg); z-index: 1; }
+  @media (max-width: 860px) { .ct-photos { max-width: 360px; } }
+</style>
+
+<script is:inline>
+  (function () {
+    var form = document.getElementById("ct-form");
+    var overlay = document.getElementById("ct-overlay");
+    var errEl = document.getElementById("ct-error");
+    if (!form || !overlay) return;
+    var btn = form.querySelector(".ct-send");
+    var ORIGINAL = btn ? btn.textContent : "Envoyer →";
+    var keyField = form.querySelector('[name="access_key"]');
+    var KEY = keyField ? keyField.value : "";
+    var busy = false;
+
+    function resetBtn() { if (btn) { btn.textContent = ORIGINAL; btn.disabled = false; } }
+
+    // Confirmation : overlay sombre ~2s par-dessus la page, puis disparaît.
+    // Le formulaire est réinitialisé (champs + type de projet + bouton).
+    function showSuccess() {
+      form.reset();
+      resetBtn();
+      overlay.hidden = false;
+      requestAnimationFrame(function () { overlay.classList.add("is-on"); });
+      setTimeout(function () {
+        overlay.classList.remove("is-on");
+        setTimeout(function () { overlay.hidden = true; busy = false; }, 550);
+      }, 2200);
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (busy) return;
+      if (errEl) errEl.hidden = true;
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      busy = true;
+
+      // Mode démo tant que la clé Web3Forms n'est pas renseignée.
+      if (!KEY || KEY === "VOTRE_CLE_WEB3FORMS") {
+        showSuccess();
+        return;
+      }
+
+      if (btn) { btn.textContent = "Envoi…"; btn.disabled = true; }
+
+      fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        body: new FormData(form),
+        headers: { Accept: "application/json" },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) showSuccess();
+          else throw new Error("web3forms");
+        })
+        .catch(function () {
+          resetBtn();
+          busy = false;
+          if (errEl) errEl.hidden = false;
+        });
+    });
+  })();
+</script>

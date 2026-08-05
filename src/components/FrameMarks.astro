@@ -1,0 +1,41 @@
+---
+/**
+ * Signature Eleusis — marques de cadrage d'angle (TL + BR).
+ * Enveloppe son contenu (slot) entre deux équerres fines en accent.
+ *
+ * Props :
+ *  - drawn : affiche les marques tracées (état statique). Défaut true à
+ *    l'Étape 1. Plus tard, on passera drawn={false} et le JS togglera
+ *    .is-drawn au reveal / hover (cf. §5).
+ *  - pad   : marge intérieure entre le contenu et les équerres (px).
+ */
+interface Props {
+  drawn?: boolean;
+  pad?: number;
+  class?: string;
+}
+const { drawn = true, pad = 8, class: klass = "" } = Astro.props;
+---
+
+<span class={`framed ${drawn ? "is-drawn" : ""} ${klass}`} style={`--frame-pad:${pad}px`}>
+  <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+  <span class="frame-content"><slot /></span>
+  <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+</span>
+
+<style>
+  .framed {
+    position: relative;
+    display: inline-block;
+    padding: var(--frame-pad);
+  }
+  /* Les deux équerres ancrées aux coins opposés du conteneur. */
+  .framed .mark {
+    position: absolute;
+    width: 11px;
+    height: 11px;
+  }
+  .framed .mark.tl { top: 0; left: 0; }
+  .framed .mark.br { bottom: 0; right: 0; }
+  .frame-content { display: inline-block; }
+</style>

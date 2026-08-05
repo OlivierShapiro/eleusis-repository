@@ -1,0 +1,347 @@
+---
+/**
+ * Process — étapes d'une réalisation vidéo complète (pré-prod → post-prod).
+ * Mise en page : timeline verticale en zigzag, ligne centrale accent,
+ * gros numéros fantômes, révélations au scroll. Remplace l'ancienne page
+ * Formules. Page complète mais pas immense.
+ */
+import BaseLayout from "../layouts/BaseLayout.astro";
+
+// `shots` = nombre de petites photos affichées pour l'étape (2 à 4).
+const steps = [
+  {
+    n: "01",
+    title: "Échange & brief",
+    desc: "Tout commence par une discussion. On cerne vos objectifs, votre message et votre public, puis on pose ensemble une direction claire.",
+    tags: ["Objectifs & message", "Références", "Cadre & budget"],
+    shots: 2,
+  },
+  {
+    n: "02",
+    title: "Pré-production",
+    desc: "On prépare chaque détail : concept créatif, écriture, storyboard, repérages, planning et logistique. Rien n'est laissé au hasard.",
+    tags: ["Concept & écriture", "Storyboard", "Repérages & planning"],
+    shots: 3,
+  },
+  {
+    n: "03",
+    title: "Tournage",
+    desc: "Le jour J, on capture l'image, la lumière et le son avec le bon matériel et une réalisation entièrement au service de votre histoire.",
+    tags: ["Réalisation", "Image & lumière", "Prise de son"],
+    shots: 4,
+  },
+  {
+    n: "04",
+    title: "Post-production",
+    desc: "Le film prend vie : montage rythmé, étalonnage cinéma, sound design et habillage graphique. C'est là que naît l'émotion.",
+    tags: ["Montage", "Étalonnage", "Son & motion"],
+    shots: 3,
+  },
+  {
+    n: "05",
+    title: "Livraison",
+    desc: "On livre aux formats adaptés à chaque diffusion (web, réseaux, cinéma), avec un cycle de révisions, prêt à être partagé.",
+    tags: ["Exports multi-formats", "Révisions", "Diffusion"],
+    shots: 2,
+  },
+];
+const tot = String(steps.length).padStart(2, "0");
+
+// Dispersion « moodboard » des photos selon leur nombre (2/3/4).
+// t/l = position %, w = largeur %, r = rotation, ar = ratio (orientations variées).
+const scatter = {
+  2: [
+    { t: "3%",  l: "0%",  w: "55%", r: "-4deg", ar: "4 / 5" },
+    { t: "34%", l: "45%", w: "53%", r: "5deg",  ar: "3 / 2" },
+  ],
+  3: [
+    { t: "1%",  l: "5%",  w: "49%", r: "-5deg", ar: "4 / 5" },
+    { t: "13%", l: "50%", w: "46%", r: "4deg",  ar: "3 / 2" },
+    { t: "50%", l: "19%", w: "47%", r: "-2deg", ar: "1 / 1" },
+  ],
+  4: [
+    { t: "0%",  l: "2%",  w: "45%", r: "-6deg", ar: "4 / 5" },
+    { t: "5%",  l: "52%", w: "43%", r: "4deg",  ar: "1 / 1" },
+    { t: "44%", l: "9%",  w: "45%", r: "3deg",  ar: "3 / 2" },
+    { t: "41%", l: "53%", w: "43%", r: "-4deg", ar: "4 / 5" },
+  ],
+};
+---
+
+<BaseLayout
+  title="Process · Eleusis"
+  description="Notre process de réalisation vidéo, de la pré-production à la post-production."
+  active="/process"
+>
+  <!-- ============ EN-TÊTE ============ -->
+  <section class="pr-head">
+    <div class="container">
+      <p class="label label--accent" data-reveal>// Process</p>
+      <h1 class="pr-head__title" data-split>Process</h1>
+      <p class="pr-head__sub text-muted" data-reveal>
+        De la première idée à la livraison finale, voici comment on donne vie
+        à votre projet.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ TIMELINE ============ -->
+  <section class="pr-time">
+    <div class="container">
+      <div class="proc" data-progress-track>
+        <span class="proc__progress" data-progress-line aria-hidden="true"></span>
+        {steps.map((s) => (
+          <article class="proc__step">
+            <span class="proc__dot" aria-hidden="true"></span>
+            <div class="proc__board" data-reveal>
+              {scatter[s.shots].map((p, k) => {
+                // Vecteur d'écartement : chaque image s'éloigne du centre de la
+                // planche (50%,50%) quand l'étape s'active. On calcule le centre
+                // du pin en % de la planche (carrée) → direction + amplitude.
+                const [arA, arB] = p.ar.split("/").map((n) => parseFloat(n));
+                const wNum = parseFloat(p.w);
+                const hNum = wNum / (arA / arB); // hauteur du pin en % de la planche
+                const cx = parseFloat(p.l) + wNum / 2;
+                const cy = parseFloat(p.t) + hNum / 2;
+                const SPREAD = 1.25;
+                const dx = ((cx - 50) * SPREAD).toFixed(1);
+                const dy = ((cy - 50) * SPREAD).toFixed(1);
+                return (
+                  <figure
+                    class="proc__pin"
+                    style={`--t:${p.t};--l:${p.l};--w:${p.w};--r:${p.r};--ar:${p.ar};--k:${k};--dx:${dx}%;--dy:${dy}%`}
+                  >
+                    <div class="media-ph" aria-hidden="true">
+                      <span class="media-ph__label label">[ {s.n}.{k + 1} ]</span>
+                    </div>
+                    <img
+                      src={`/images/process/process-${s.n}-${k + 1}.webp`}
+                      alt=""
+                      loading="lazy"
+                      onerror="this.style.display='none'"
+                    />
+                  </figure>
+                );
+              })}
+            </div>
+            <div class="proc__card" data-reveal>
+              <span class="proc__ghost" aria-hidden="true">{s.n}</span>
+              <span class="proc__count count">{s.n} // {tot}</span>
+              <h3 class="proc__title">{s.title}</h3>
+              <p class="proc__desc text-muted">{s.desc}</p>
+              <ul class="proc__tags">
+                {s.tags.map((t) => (<li>{t}</li>))}
+              </ul>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  /* En-tête */
+  .pr-head {
+    background:
+      radial-gradient(60% 46% at 78% 50%, rgba(48,92,165,0.18) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-top: calc(var(--nav-h) + clamp(48px, 10vh, 130px));
+    padding-bottom: clamp(36px, 6vw, 80px);
+  }
+  .pr-head__title { font-size: clamp(3.5rem, 13vw, 10rem); letter-spacing: 0.01em; margin-top: 0.1em; }
+  .pr-head__sub { margin-top: 1.2em; font-size: 0.95rem; max-width: 46ch; }
+
+  /* Timeline */
+  .pr-time {
+    background:
+      radial-gradient(55% 50% at 0% 40%, rgba(52,98,175,0.16) 0%, rgba(18,18,20,0) 80%),
+      radial-gradient(55% 50% at 100% 75%, rgba(52,98,175,0.13) 0%, rgba(18,18,20,0) 80%),
+      var(--bg-base);
+    padding-block: clamp(48px, 8vw, 110px) clamp(72px, 12vw, 160px);
+  }
+  .proc { position: relative; max-width: 1000px; margin-inline: auto; }
+  /* rail (faible) */
+  .proc::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    transform: translateX(-50%);
+    /* rail blanc (et non gris faible) pour ne pas le confondre avec les
+       rayures d'anomalie du fond ; se remplit en rose au scroll par-dessus. */
+    background: rgba(255, 255, 255, 0.5);
+  }
+  /* progression accent qui se remplit au scroll (animée par MotionEngine) */
+  .proc__progress {
+    position: absolute;
+    left: 50%;
+    margin-left: -1px;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    background: var(--accent);
+    transform-origin: top;
+    z-index: 1;
+  }
+
+  .proc__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(32px, 5vw, 80px);
+    align-items: center;
+    margin-bottom: clamp(56px, 9vw, 120px);
+  }
+  .proc__step:last-child { margin-bottom: 0; }
+
+  /* alternance : impair = texte à gauche / photo à droite ; pair = inverse */
+  .proc__step:nth-child(odd) .proc__card { order: 1; align-items: flex-end; text-align: right; }
+  .proc__step:nth-child(odd) .proc__board { order: 2; }
+  .proc__step:nth-child(even) .proc__board { order: 1; }
+  .proc__step:nth-child(even) .proc__card { order: 2; align-items: flex-start; text-align: left; }
+
+  /* point au centre, sur la ligne.
+     Centrage par marges négatives (et non transform: translate) : ainsi la
+     propriété `scale` tourne autour du centre exact, le point reste donc
+     toujours pile sur le rail quelle que soit son échelle. `scale` (propriété
+     individuelle) s'anime proprement, là où transform: scale(var()) ne
+     s'interpole pas sous Chrome. */
+  .proc__dot {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -6px;
+    margin-top: -6px;
+    scale: 1;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 6px rgba(255,30,99,0.16);
+    z-index: 2;
+    transition:
+      scale 0.55s var(--ease),
+      background 0.55s var(--ease),
+      box-shadow 0.55s var(--ease);
+  }
+  /* sous JS : point « pas encore atteint » par le trait — état « éteint ».
+     Rose très grisé/assombri (mélangé vers le fond) + fin liseré pour le
+     détacher proprement, sans casser la DA. :global(.js-anim) car la classe
+     est portée par <html> (hors scope Astro). */
+  :global(.js-anim) .proc__dot {
+    scale: 0.78;
+    background: color-mix(in srgb, var(--accent) 26%, #14141a);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 0 0 5px rgba(255, 30, 99, 0.05);
+  }
+  /* atteint par le trait rouge : se rallume, grossit + halo lumineux */
+  .proc__dot.is-active {
+    scale: 1.3;
+    background: var(--accent);
+    box-shadow:
+      0 0 0 6px rgba(255,30,99,0.20),
+      0 0 16px 2px rgba(255,30,99,0.60),
+      0 0 30px 8px rgba(255,30,99,0.32);
+  }
+
+  /* planche « moodboard » : 2 à 4 photos dispersées, tailles & orientations
+     variées, légèrement pivotées et superposées. */
+  .proc__board { position: relative; width: 100%; aspect-ratio: 1 / 1; transition: translate var(--dur-reveal) var(--ease); }
+  .proc__pin {
+    position: absolute;
+    top: var(--t);
+    left: var(--l);
+    width: var(--w);
+    aspect-ratio: var(--ar);
+    transform: rotate(var(--r));
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--bg-deep);
+    box-shadow: 0 18px 40px -22px rgba(0,0,0,0.85);
+    z-index: calc(var(--k) + 1);
+    transition:
+      transform var(--dur-reveal) var(--ease),
+      scale var(--dur-reveal) var(--ease),
+      translate var(--dur-reveal) var(--ease),
+      box-shadow var(--dur-reveal) var(--ease);
+  }
+  /* étape atteinte par le trait rose : les images grandissent et s'écartent.
+     scale/translate en propriétés individuelles → se composent avec le
+     transform: rotate(var(--r)) sans l'écraser. */
+  .proc__step.is-active .proc__pin {
+    scale: 1.22;
+    translate: var(--dx) var(--dy);
+    box-shadow: 0 30px 64px -22px rgba(0,0,0,0.9);
+  }
+  /* … et toute la planche s'éloigne de la ligne centrale (vers l'extérieur).
+     Étapes impaires : planche à droite → glisse à droite ; paires : à gauche.
+     !important : GSAP (reveal) pose « translate: none » en inline sur la
+     planche → il faut l'emporter dessus. Se compose avec son transform. */
+  .proc__step:nth-child(odd).is-active .proc__board { translate: 18% 0 !important; }
+  .proc__step:nth-child(even).is-active .proc__board { translate: -18% 0 !important; }
+  /* au survol : se redresse, passe devant, léger agrandissement */
+  .proc__pin:hover {
+    transform: rotate(0deg) scale(1.05);
+    z-index: 20;
+    box-shadow: 0 30px 64px -24px rgba(0,0,0,0.9);
+  }
+  .proc__pin .media-ph,
+  .proc__pin img { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .proc__pin img { object-fit: cover; }
+  .media-ph {
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(120% 100% at 72% -10%, rgba(48,92,165,0.40) 0%, rgba(20,20,28,0) 58%),
+      linear-gradient(155deg, #1a1a22 0%, #131318 60%, #0e0e12 100%);
+  }
+  .media-ph__label { color: var(--text-faint); letter-spacing: 0.24em; }
+
+  .proc__card { display: flex; flex-direction: column; }
+  .proc__ghost {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.8;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    color: var(--text-faint);
+    opacity: 0.4;
+  }
+  .proc__count { margin: 0.6em 0 0.5em; color: var(--text-muted); }
+  .proc__title { font-size: clamp(1.6rem, 3vw, 2.4rem); }
+  .proc__desc { margin-top: 0.7em; font-size: 0.95rem; max-width: 40ch; }
+  .proc__tags { margin-top: 1.2em; display: flex; flex-wrap: wrap; gap: 8px; }
+  .proc__step:nth-child(odd) .proc__tags { justify-content: flex-end; }
+  .proc__tags li {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    padding: 0.5em 0.9em;
+    border: 1px solid var(--line-strong);
+    border-radius: 2px;
+  }
+
+  @media (max-width: 760px) {
+    .proc::before { left: 7px; }
+    .proc__progress { left: 7px; }
+    .proc__step {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      padding-left: 36px;
+    }
+    .proc__step .proc__board { order: 1; }
+    /* mobile : la ligne est à gauche (pas au centre) → pas de glissement latéral */
+    .proc__step:nth-child(odd).is-active .proc__board,
+    .proc__step:nth-child(even).is-active .proc__board { translate: 0 !important; }
+    .proc__step:nth-child(odd) .proc__card,
+    .proc__step:nth-child(even) .proc__card { order: 2; align-items: flex-start; text-align: left; }
+    .proc__dot { left: 1.5px; top: 0; margin: 0; }
+    .proc__step:nth-child(odd) .proc__tags { justify-content: flex-start; }
+  }
+</style>

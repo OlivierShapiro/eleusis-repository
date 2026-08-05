@@ -1,0 +1,382 @@
+---
+/**
+ * Moteur d'animation — Étape 3 (FOCUS_DESIGN_SYSTEM §6).
+ * Lenis (smooth scroll) + GSAP + ScrollTrigger + CustomEase.
+ * Une seule courbe : cubic-bezier(0.16,1,0.3,1) reproduite via CustomEase.
+ *
+ * - Load-in : nav drop-in, wordmark ELEUSIS (clip-path + translateY),
+ *   eyebrow + descripteur en cascade, scroll-down révélé puis flottant.
+ * - Reveals au scroll : tout [data-reveal] en fade+rise, once:true.
+ * - reduced-motion / pas de JS : aucun masquage, tout visible, pas de Lenis.
+ */
+---
+
+<script is:inline src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
+<script is:inline src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
+
+<script is:inline>
+  (function () {
+    const root = document.documentElement;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // ---- Vidéos auto-lues : ne jouent QUE visibles (perf), pause hors champ.
+    //      reduced-motion → pause + 1re image. Tourne toujours (avant le guard). ----
+    (function setupVideos() {
+      const vids = Array.prototype.slice.call(
+        document.querySelectorAll("video[data-autoplay]")
+      );
+      if (!vids.length) return;
+      if (reduce) {
+        vids.forEach((v) => {
+          try { v.removeAttribute("autoplay"); v.pause(); } catch (e) {}
+        });
+        return;
+      }
+      if (!("IntersectionObserver" in window)) return;
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            const v = e.target;
+            if (e.isIntersecting) {
+              const p = v.play();
+              if (p && p.catch) p.catch(() => {});
+            } else {
+              v.pause();
+            }
+          });
+        },
+        { threshold: 0.15 }
+      );
+      vids.forEach((v) => io.observe(v));
+    })();
+
+    // ---- Embeds (YouTube/Vimeo) en couverture : chargés en lazy à l'approche.
+    //      Pas de chargement autoplay en reduced-motion (on garde la vignette). ----
+    if (!reduce && "IntersectionObserver" in window) {
+      const frames = Array.prototype.slice.call(
+        document.querySelectorAll("iframe[data-embed-src]")
+      );
+      if (frames.length) {
+        const io2 = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) => {
+              if (e.isIntersecting) {
+                const f = e.target;
+                if (!f.src) f.src = f.getAttribute("data-embed-src");
+                io2.unobserve(f);
+              }
+            });
+          },
+          { rootMargin: "300px" }
+        );
+        frames.forEach((f) => io2.observe(f));
+      }
+    }
+
+    // Fail-safe : si reduced-motion ou CDN indisponible, tout reste visible.
+    if (reduce || !window.gsap || !window.Lenis || !window.ScrollTrigger) {
+      root.classList.remove("js-anim");
+      // compteurs : valeur finale directe (pas d'animation)
+      document.querySelectorAll("[data-count]").forEach((el) => {
+        el.textContent =
+          (el.getAttribute("data-count") || "") + (el.getAttribute("data-suffix") || "");
+      });
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    if (window.CustomEase) {
+      CustomEase.create("eleusis", "M0,0 C0.16,1 0.3,1 1,1"); // = cubic-bezier(0.16,1,0.3,1)
+    }
+    const EASE = window.CustomEase ? "eleusis" : "expo.out";
+
+    // ---- Lenis smooth scroll (intégration canonique via gsap.ticker) ----
+    const lenis = new Lenis({
+      duration: 1.1,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+    });
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((time) => lenis.raf(time * 1000));
+    gsap.ticker.lagSmoothing(0);
+    window.lenis = lenis; // accessible (debug + scrollTo programmatique)
+
+    // ---- Load-in (une fois) ----
+    const q = (s) => document.querySelector(s);
+    const nav = q(".nav");
+    const title = q(".hero__title");
+    const eyebrow = q(".hero__eyebrow");
+    const desc = q(".hero__desc");
+    const scroll = q(".hero__scroll");
+
+    const tl = gsap.timeline({ defaults: { ease: EASE } });
+    if (nav) tl.to(nav, { y: 0, opacity: 1, duration: 0.8 }, 0.1);
+    if (title)
+      tl.fromTo(
+        title,
+        { y: 40, opacity: 0, clipPath: "inset(0 0 100% 0)" },
+        { y: 0, opacity: 1, clipPath: "inset(0 0 0% 0)", duration: 1.0 },
+        0.15
+      );
+    if (eyebrow) tl.to(eyebrow, { y: 0, opacity: 1, duration: 0.8 }, 0.45);
+    if (desc) tl.to(desc, { y: 0, opacity: 1, duration: 0.8 }, 0.6);
+    if (scroll) tl.to(scroll, { opacity: 1, duration: 0.6 }, 0.85);
+
+    // Flottement doux de l'indicateur scroll, après le load-in.
+    if (scroll) {
+      gsap.to(scroll, {
+        y: 8,
+        repeat: -1,
+        yoyo: true,
+        duration: 1.3,
+        ease: "sine.inOut",
+        delay: 1.4,
+      });
+      // Opacité liée au scroll : se fond en descendant, revient en haut.
+      const FADE = 240;
+      let revealed = false;
+      gsap.delayedCall(1.45, () => (revealed = true)); // après le load-in
+      lenis.on("scroll", () => {
+        if (!revealed) return;
+        const y = window.scrollY || 0;
+        scroll.style.opacity = String(Math.max(0, Math.min(1, 1 - y / FADE)));
+      });
+    }
+
+    // ---- Reveals au scroll (fade + rise, once) ----
+    // will-change posé juste avant le reveal, retiré à la fin → pas de
+    // calques composités gardés en permanence (sinon lag).
+    gsap.utils.toArray("[data-reveal]").forEach((el) => {
+      gsap.to(el, {
+        opacity: 1,
+        y: 0,
+        duration: 0.8,
+        ease: EASE,
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          once: true,
+          onEnter: () => (el.style.willChange = "transform, opacity"),
+        },
+        onComplete: () => (el.style.willChange = "auto"),
+      });
+    });
+
+    // ---- Marquees génériques : boucle continue (NE s'arrête PAS au survol) ----
+    // Tout élément [data-marquee] (= la piste) doit contenir 2 copies → -50%.
+    gsap.utils.toArray("[data-marquee]").forEach((track) => {
+      const dur = parseFloat(track.getAttribute("data-marquee")) || 26;
+      gsap.to(track, {
+        xPercent: -50,
+        duration: dur,
+        ease: "none",
+        repeat: -1,
+      });
+    });
+
+    // ---- Titres découpés : reveal ligne par ligne (+ signature opt-in) ----
+    gsap.utils.toArray("[data-split]").forEach((splitTitle) => {
+      if (!window.SplitType) {
+        gsap.set(splitTitle, { opacity: 1 }); // fail-safe : titre visible
+        return;
+      }
+      const split = new SplitType(splitTitle, { types: "lines,words" });
+      gsap.set(splitTitle, { opacity: 1 }); // conteneur visible, lignes masquées
+
+      // Marques de cadrage (opt-in [data-frameword]) :
+      //  - défaut : encadre le dernier mot ;
+      //  - [data-frameword="block"] : encadre tout le bloc du titre (utile sur
+      //    les titres multi-lignes, sinon le coin haut-gauche tombe au milieu).
+      const words = split.words || [];
+      const wantsFrame = splitTitle.hasAttribute("data-frameword");
+      const frameBlock = splitTitle.getAttribute("data-frameword") === "block";
+      const markTarget = wantsFrame
+        ? (frameBlock ? splitTitle : words[words.length - 1])
+        : null;
+      if (markTarget) {
+        markTarget.classList.add(frameBlock ? "markblock" : "markword");
+        markTarget.insertAdjacentHTML(
+          "beforeend",
+          '<span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>' +
+            '<span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>'
+        );
+      }
+
+      gsap.from(split.lines, {
+        yPercent: 110,
+        opacity: 0,
+        duration: 0.9,
+        ease: EASE,
+        stagger: 0.1,
+        scrollTrigger: {
+          trigger: splitTitle,
+          start: "top 82%",
+          once: true,
+          onEnter: () => {
+            if (markTarget)
+              gsap.delayedCall(0.55, () => markTarget.classList.add("is-drawn"));
+          },
+        },
+      });
+    });
+
+    // ---- Compteurs animés ([data-count]) ----
+    gsap.utils.toArray("[data-count]").forEach((el) => {
+      const end = parseFloat(el.getAttribute("data-count")) || 0;
+      const suffix = el.getAttribute("data-suffix") || "";
+      const obj = { v: 0 };
+      gsap.to(obj, {
+        v: end,
+        duration: 1.5,
+        ease: EASE,
+        scrollTrigger: { trigger: el, start: "top 85%", once: true },
+        onUpdate: () => { el.textContent = Math.round(obj.v) + suffix; },
+      });
+    });
+
+    // ---- Texte qui s'illumine mot par mot au scroll ([data-reveal-words]) ----
+    if (window.SplitType) {
+      gsap.utils.toArray("[data-reveal-words]").forEach((el) => {
+        const split = new SplitType(el, { types: "words" });
+        gsap.fromTo(
+          split.words,
+          { opacity: 0.16 },
+          {
+            opacity: 1,
+            ease: "none",
+            stagger: 0.4,
+            scrollTrigger: { trigger: el, start: "top 82%", end: "bottom 58%", scrub: true },
+          }
+        );
+      });
+    }
+
+    // ---- Boutons magnétiques ----
+    document.querySelectorAll("[data-magnetic]").forEach((btn) => {
+      const strength = 0.3;
+      btn.addEventListener("mousemove", (e) => {
+        const r = btn.getBoundingClientRect();
+        const x = (e.clientX - (r.left + r.width / 2)) * strength;
+        const y = (e.clientY - (r.top + r.height / 2)) * strength;
+        gsap.to(btn, { x, y, duration: 0.4, ease: EASE });
+      });
+      btn.addEventListener("mouseleave", () =>
+        gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: EASE })
+      );
+    });
+
+    // ---- Révélation média par clip-path (volet) + scale-in ----
+    gsap.utils.toArray("[data-clip]").forEach((el) => {
+      const inner = el.querySelector(".clip__inner") || el;
+      const st = { trigger: el, start: "top 82%", once: true };
+      gsap.fromTo(
+        el,
+        { clipPath: "inset(0 0 100% 0)" },
+        { clipPath: "inset(0 0 0% 0)", duration: 0.9, ease: EASE, scrollTrigger: st }
+      );
+      if (inner !== el) {
+        gsap.fromTo(
+          inner,
+          { scale: 1.12 },
+          { scale: 1, duration: 1.0, ease: EASE, scrollTrigger: st }
+        );
+      }
+    });
+
+    // ---- Parallax générique (médias avec [data-parallax]) ----
+    // Amplitude optionnelle : data-parallax="18" → translate ±18% ; valeur
+    // négative = sens inversé. Défaut 6 (subtil, comme la bobine projets).
+    gsap.utils.toArray("[data-parallax]").forEach((p) => {
+      const amp = parseFloat(p.dataset.parallax) || 6;
+      gsap.fromTo(
+        p,
+        { yPercent: -amp },
+        {
+          yPercent: amp,
+          ease: "none",
+          scrollTrigger: {
+            trigger: p.closest("[data-parallax-box]") || p,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
+    });
+
+    // ---- Ligne de progression (timeline Process) : se remplit au scroll ----
+    // En plus du remplissage, chaque point (.proc__dot) « s'allume » (grossit +
+    // glow) dès que la pointe du trait rouge l'atteint. On mesure la position
+    // relative de chaque point dans le rail, puis on compare à la progression.
+    gsap.utils.toArray("[data-progress-line]").forEach((line) => {
+      const track = line.closest("[data-progress-track]") || line.parentElement;
+      const dots = Array.prototype.slice.call(track.querySelectorAll(".proc__dot"));
+      let ratios = [];
+      const measure = () => {
+        const tr = track.getBoundingClientRect();
+        const h = tr.height || 1;
+        ratios = dots.map((d) => {
+          const r = d.getBoundingClientRect();
+          return (r.top + r.height / 2 - tr.top) / h;
+        });
+      };
+      gsap.fromTo(
+        line,
+        { scaleY: 0 },
+        {
+          scaleY: 1,
+          ease: "none",
+          transformOrigin: "top",
+          scrollTrigger: {
+            trigger: track,
+            start: "top 65%",
+            end: "bottom 75%",
+            scrub: true,
+            onRefresh: measure,
+            onUpdate: (self) => {
+              const p = self.progress;
+              for (let i = 0; i < dots.length; i++) {
+                // léger seuil : ça s'active pile quand le trait touche le point
+                const on = p >= ratios[i] - 0.004;
+                dots[i].classList.toggle("is-active", on);
+                // même déclencheur pour l'étape → images (grossissent + s'écartent)
+                const step = dots[i].closest(".proc__step");
+                if (step) step.classList.toggle("is-active", on);
+              }
+            },
+          },
+        }
+      );
+      measure();
+    });
+
+    // ---- Parallax des médias de la bobine (profondeur subtile) ----
+    // translateY scrubbé sur la visibilité de chaque média. transform only.
+    gsap.utils.toArray(".feature__parallax").forEach((p) => {
+      gsap.fromTo(
+        p,
+        { yPercent: -6 },
+        {
+          yPercent: 6,
+          ease: "none",
+          scrollTrigger: {
+            trigger: p.closest(".feature"),
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        }
+      );
+    });
+
+    // ---- Refresh après chargement des polices/images ----
+    window.addEventListener("load", () => ScrollTrigger.refresh());
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => ScrollTrigger.refresh());
+    }
+    window.addEventListener("resize", () => ScrollTrigger.refresh());
+  })();
+</script>

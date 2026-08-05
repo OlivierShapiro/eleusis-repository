@@ -1,0 +1,138 @@
+---
+/**
+ * Footer global (FOCUS_PLAN_PAGES §B) — Étape 1 : statique.
+ * Reveal en cascade + marquee secondaire : ajoutés plus tard.
+ * Textes = PLACEHOLDERS (ne pas remplacer par de fausses vraies infos).
+ */
+import FrameMarks from "./FrameMarks.astro";
+
+const cols = [
+  {
+    title: "Pages",
+    items: [
+      { label: "Projets", href: "/projets" },
+      { label: "Process", href: "/process" },
+      { label: "À propos", href: "/a-propos" },
+      { label: "Contact", href: "/contact" },
+    ],
+  },
+  {
+    title: "Réseaux",
+    items: [
+      { label: "Instagram", href: "https://www.instagram.com/oliviershapiro/" },
+      { label: "YouTube", href: "https://www.youtube.com/@oliviershapiro" },
+    ],
+  },
+  {
+    title: "Légal",
+    items: [
+      { label: "Mentions", href: "#" },
+      { label: "Confidentialité", href: "#" },
+    ],
+  },
+];
+---
+
+<footer class="footer grain bg-deep">
+  <div class="container footer__inner">
+    <!-- Bloc 1 : wordmark + baseline -->
+    <div class="footer__brand" data-reveal>
+      <FrameMarks pad={10}><span class="footer__wordmark">ELEUSIS</span></FrameMarks>
+      <p class="footer__baseline text-muted">Nous racontons votre histoire</p>
+    </div>
+
+    <!-- Bloc 2 : sitemap -->
+    <nav class="footer__sitemap" aria-label="Plan du site" data-reveal>
+      {cols.map((col) => (
+        <div class="footer__col">
+          <p class="label">{col.title}</p>
+          <ul>
+            {col.items.map((it) => (
+              <li>
+                <a
+                  class="footer__link"
+                  href={it.href}
+                  target={it.href.startsWith("http") ? "_blank" : undefined}
+                  rel={it.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                >{it.label}</a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+
+      <!-- Bloc 3 : contact -->
+      <div class="footer__col">
+        <p class="label">Contact</p>
+        <ul>
+          <li><a class="footer__link" href="mailto:contact.focusvideaste@gmail.com">contact.focusvideaste@gmail.com</a></li>
+          <li><span class="footer__link text-muted">Based in Switzerland</span></li>
+        </ul>
+      </div>
+    </nav>
+  </div>
+
+  <hr class="rule" />
+
+  <div class="container footer__bottom">
+    <span class="count">© 2025 Eleusis. Tous droits réservés</span>
+    <span class="count">N°00 / 00</span>
+  </div>
+</footer>
+
+<style>
+  .footer { position: relative; padding-top: clamp(56px, 8vw, 96px); }
+  /* Halo rose qui part du centre tout en bas de la page et monte en
+     s'estompant. Les zones transparentes laissent voir la texture de fond. */
+  .bg-deep {
+    background: radial-gradient(125% 100% at 50% 100%,
+      rgba(255, 30, 99, 0.24) 0%,
+      rgba(255, 30, 99, 0.08) 42%,
+      rgba(255, 30, 99, 0) 76%);
+  }
+
+  .footer__inner {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr;
+    gap: clamp(40px, 6vw, 96px);
+    padding-bottom: clamp(40px, 6vw, 72px);
+  }
+  .footer__wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    font-size: clamp(2.4rem, 8vw, 5rem);
+    /* accent du É : voir global.css (≥ 0.95em nécessaire) */
+    line-height: 1;
+  }
+  .footer__baseline { margin-top: 1.4em; font-size: 0.85rem; }
+
+  .footer__sitemap {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(20px, 3vw, 40px);
+  }
+  .footer__col .label { margin-bottom: 1.2em; }
+  .footer__col li + li { margin-top: 0.7em; }
+  .footer__link {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+  .footer__link:hover { color: var(--text); }
+
+  .footer__bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-block: clamp(20px, 3vw, 32px);
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 860px) {
+    .footer__inner { grid-template-columns: 1fr; }
+    .footer__sitemap { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>

@@ -1,0 +1,50 @@
+---
+/**
+ * CTA final réutilisable (FOCUS_PLAN_PAGES 1.6) — « Parlons de votre projet ».
+ * Animations : reveal fade+rise (data-reveal) · bouton magnétique (data-magnetic).
+ * Texte = PLACEHOLDER conservé verbatim.
+ */
+interface Props {
+  title?: string;
+  cta?: string;
+  href?: string;
+}
+const {
+  title = "Parlons de votre projet",
+  cta = "Démarrer un projet →",
+  href = "/contact",
+} = Astro.props;
+---
+
+<section class="cta grain">
+  <div class="container cta__inner" data-reveal>
+    <h2 class="cta__title">{title}</h2>
+    <a class="btn-accent cta__btn" href={href} data-magnetic>{cta}</a>
+  </div>
+</section>
+
+<style>
+  .cta {
+    position: relative;
+    text-align: center;
+    padding-block: clamp(88px, 15vw, 200px);
+    /* dégradé accent très faible (≤10%) + base */
+    background:
+      radial-gradient(90% 120% at 50% 120%, rgba(255,30,99,0.08) 0%, rgba(18,18,20,0) 60%),
+      var(--bg-base);
+  }
+  .cta__inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .cta__title {
+    font-size: clamp(2.4rem, 7vw, 6rem);
+    letter-spacing: 0.01em;
+    max-width: 16ch;
+  }
+  .cta__btn {
+    margin-top: clamp(1.8em, 3vw, 2.6em);
+    will-change: transform;
+  }
+</style>
