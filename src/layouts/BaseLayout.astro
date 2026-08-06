@@ -117,16 +117,56 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
         if (!panel || reduce) return;
         var html = document.documentElement;
 
+        // ---- Videos : elles saturent le compositeur pendant la transition ----
+        // Sur la page Projets, quatre videos avec filtres CSS tournent en meme
+        // temps. Chaque image doit etre refiltree par le GPU. Un panneau plein
+        // ecran qui s'anime par dessus n'a plus de budget et saccade. On les
+        // met donc en veille le temps de la transition : invisible pour
+        // l'utilisateur, puisque l'ecran est couvert.
+        function pauserVideos() {
+          var vs = document.querySelectorAll("video");
+          for (var i = 0; i < vs.length; i++) { try { vs[i].pause(); } catch (e) {} }
+        }
+        // On relance ce qui doit l'etre, en respectant les regles de chaque
+        // page : les fonds marques data-autoplay, et le mur seulement hors
+        // mobile (ou il reste volontairement fige pour la batterie).
+        function relancerVideos() {
+          var petitEcran = window.matchMedia("(max-width: 760px)").matches;
+          var lire = function (v) {
+            var r = v.getBoundingClientRect();
+            if (r.width === 0 || r.bottom <= 0 || r.top >= window.innerHeight) return;
+            var pr = v.play();
+            if (pr && pr.catch) pr.catch(function () {});
+          };
+          var fonds = document.querySelectorAll("video[data-autoplay]");
+          for (var i = 0; i < fonds.length; i++) lire(fonds[i]);
+          if (!petitEcran) {
+            var mur = document.querySelectorAll(".wall__mon video");
+            for (var j = 0; j < mur.length; j++) {
+              if (!mur[j].closest(".wall__mon").classList.contains("is-out")) lire(mur[j]);
+            }
+          }
+        }
+
         // Arrivée : le panneau couvre déjà (classe posée en <head>) et se retire
         // via l'animation CSS. On retire la classe une fois l'animation finie →
         // le panneau revient au repos (en bas), prêt pour la prochaine couverture.
         if (html.classList.contains("pgt-enter")) {
           var revele = false, nettoye = false;
 
+          // tant que le panneau couvre, on empeche toute lecture de demarrer
+          var bloquerLecture = function (e) {
+            if (e.target && e.target.pause) { try { e.target.pause(); } catch (err) {} }
+          };
+          document.addEventListener("play", bloquerLecture, true);
+          pauserVideos();
+
           var nettoyer = function () {
             if (nettoye) return;
             nettoye = true;
             html.classList.remove("pgt-enter", "pgt-go");
+            document.removeEventListener("play", bloquerLecture, true);
+            relancerVideos();
           };
 
           // On ne revele qu'une fois le gros du chargement passe : les polices
@@ -186,6 +226,7 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
           if (leaving) return;
           leaving = true;
           try { sessionStorage.setItem("pgt", "1"); } catch (er) {}
+          pauserVideos(); // le GPU est libre pour l'animation qui suit
           panel.classList.add("is-covering");
           var done = false;
           var go = function () { if (done) return; done = true; location.href = url.href; };
