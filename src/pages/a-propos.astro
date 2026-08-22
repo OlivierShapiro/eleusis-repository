@@ -9,12 +9,6 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SouvenirsBoard from "../components/SouvenirsBoard.astro";
 
-const figures = [
-  { n: "120", s: "+", label: "Projets livrés" },
-  { n: "10", s: "", label: "Ans d'expérience" },
-  { n: "60", s: "+", label: "Clients" },
-  { n: "5", s: "", label: "Formats maîtrisés" },
-];
 // Valeurs d'équipe / culture (inspirées de l'esprit, réécrites pour Eleusis).
 const values = [
   { title: "Famille", desc: "Plus qu'un studio, une bande. On se dit les choses, on s'entraide sans même qu'on le demande, et on construit ensemble ce qui nous fait vibrer." },
@@ -98,9 +92,10 @@ const srSrc = srEmbed || showreel.video || "";
       <p class="label label--accent" data-reveal>// Récit</p>
       <h2 class="ab-story__quote" data-split data-frameword="block">Chaque image sert une histoire</h2>
       <div class="ab-story__prose">
-        <p data-reveal>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt.</p>
-        <p data-reveal>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip.</p>
-        <p data-reveal>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore.</p>
+        <p data-reveal>Le marché de la vidéo n'a jamais autant produit, et il n'a jamais aussi peu gardé. Des images faites pour tenir trois jours, remplacées par d'autres images faites pour tenir trois jours. On a décidé de travailler exactement à l'opposé.</p>
+        <p data-reveal>Eleusis existe pour les marques qui ont autre chose à dire qu'un message publicitaire. Avant le premier plan, il y a l'écriture : on cherche ce qu'elles ont réellement à raconter, on construit le récit autour, et on ne filme qu'ensuite. Rien n'est laissé au hasard, parce qu'une émotion ne s'improvise pas, elle se prépare. C'est plus lent, c'est plus exigeant, et c'est la seule façon de faire qui nous intéresse.</p>
+        <p data-reveal>Ce qu'on construit, on le documente. Pas pour la vitrine, mais parce que personne ne nous a jamais montré comment se fabrique une histoire, et qu'on a mis des années à l'apprendre seuls. Si quelqu'un s'y reconnaît et décide de s'y mettre sérieusement, tant mieux.</p>
+        <p data-reveal class="ab-story__chute">Filmer pour ce qui reste. Le reste ne nous intéresse pas.</p>
       </div>
 
       <!-- Notification cliquable → ouvre le showreel -->
@@ -180,18 +175,6 @@ const srSrc = srEmbed || showreel.video || "";
     </div>
   </section>
 
-  <!-- ============ CHIFFRES ============ -->
-  <section class="ab-figures">
-    <div class="container ab-figures__grid">
-      {figures.map((f) => (
-        <div class="ab-fig" data-reveal>
-          <span class="ab-fig__num" data-count={f.n} data-suffix={f.s}>0</span>
-          <span class="ab-fig__label label">{f.label}</span>
-        </div>
-      ))}
-    </div>
-  </section>
-
   <!-- Modal showreel (ouvert depuis la notification) -->
   <div class="sr-modal" id="sr-modal" hidden role="dialog" aria-modal="true" aria-label="Showreel">
     <span class="sr-puck" id="sr-puck" aria-hidden="true"><i class="sr-puck__tri"></i></span>
@@ -253,6 +236,8 @@ const srSrc = srEmbed || showreel.video || "";
   .ab-story__quote { font-size: clamp(2rem, 5.5vw, 4.4rem); margin: 0.4em 0 1em; max-width: 18ch; }
   .ab-story__prose { max-width: 60ch; display: flex; flex-direction: column; gap: 1.4em; }
   .ab-story__prose p { color: var(--text-muted); font-size: clamp(0.95rem, 1.3vw, 1.05rem); margin: 0 auto; }
+  /* la derniere ligne est une chute : on la pose en blanc, un peu plus grande */
+  .ab-story__chute { color: var(--text); font-size: clamp(1.05rem, 1.6vw, 1.25rem); margin-top: 0.6em; }
 
   .ab-float { position: absolute; z-index: 1; width: clamp(120px, 13vw, 200px); }
   .ab-float__inner {
@@ -340,13 +325,6 @@ const srSrc = srEmbed || showreel.video || "";
   .ab-coulisses { background: var(--bg-base); padding-bottom: clamp(64px, 11vw, 150px); }
   .ab-coulisses__label { margin-bottom: clamp(16px, 2vw, 28px); text-align: center; }
 
-  /* ---------- Chiffres ---------- */
-  .ab-figures { background: var(--bg-base); padding-block: clamp(48px, 7vw, 100px); }
-  .ab-figures__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: clamp(20px, 3vw, 40px); }
-  .ab-fig { display: flex; flex-direction: column; gap: 0.5em; padding-top: clamp(20px, 2.5vw, 32px); border-top: 1px solid var(--line-strong); }
-  .ab-fig__num { font-family: var(--font-display); font-weight: 800; line-height: 0.9; font-size: clamp(2.6rem, 6vw, 5rem); color: var(--text); }
-  .ab-fig__label { color: var(--text-muted); }
-  @media (max-width: 680px) { .ab-figures__grid { grid-template-columns: 1fr 1fr; gap: 28px; } }
 
   /* ---------- Notification « Showreel » ---------- */
   .sr-notif {

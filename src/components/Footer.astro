@@ -6,6 +6,8 @@
  */
 import FrameMarks from "./FrameMarks.astro";
 
+const annee = new Date().getFullYear();
+
 const cols = [
   {
     title: "Pages",
@@ -75,7 +77,7 @@ const cols = [
   <hr class="rule" />
 
   <div class="container footer__bottom">
-    <span class="count">© 2025 Eleusis. Tous droits réservés</span>
+    <span class="count">© {annee} Eleusis. Tous droits réservés</span>
     <span class="count">N°00 / 00</span>
   </div>
 </footer>
