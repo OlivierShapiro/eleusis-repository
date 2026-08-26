@@ -1,6 +1,6 @@
 ---
 /**
- * Projets (FOCUS_PLAN_PAGES §2, refonte) — en-tête à fond vidéo +
+ * Projets : en-tête à fond vidéo, moniteur pilote par la liste des projets.
  * « roue de cartes » : catégories au-dessus (déclencheurs au survol),
  * cartes en éventail/arc en bas. Au survol d'une catégorie : spin rapide +
  * les projets de la catégorie grandissent au centre, les autres reculent.
@@ -13,7 +13,7 @@ import { projects } from "../data/projects";
 
 const total = String(projects.length).padStart(2, "0");
 
-// Disposition « En coulisses » (page Projets) — même contenu que la page
+// Disposition « En coulisses » (page Projets) : même contenu que la page
 // À propos (src/data/souvenirs.ts) mais éparpillé AUTREMENT (plus colonné).
 const coulissesLayout = [
   { t: "10%", l: "5%",  w: "clamp(150px, 15vw, 220px)", r: "3deg",    cap: "Sur le tournage", align: "left",  p: -20 },
@@ -95,36 +95,50 @@ const filters = baseFilters.map((f) => ({
 
     </div>
 
-    <!-- Liste editoriale : les titres en grand, l'apercu suit le curseur.
-         Hors du conteneur pour que la liste occupe toute la largeur utile. -->
-    <div class="ed" id="ed" data-reveal>
-      {projects.map((p, i) => (
-        <a
-          class:list={["ed__row", { "is-soon": p.placeholder }]}
-          data-i={i}
-          data-category={p.category}
-          href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
-          aria-label={`${p.title}, ${p.placeholder ? "a venir" : p.cardType}`}
-        >
-          <span class="ed__num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-          <span class="ed__titre">{p.title}</span>
-          <span class="ed__meta">
-            {p.placeholder ? "A venir" : p.cardType}{p.year ? " · " + p.year : ""}
-          </span>
-          <span class="ed__vignette" aria-hidden="true">
-            {p.placeholder ? (
-              <span class="coming-soon">
-                <span class="coming-soon__grad"></span>
-                <span class="coming-soon__label">Prochainement</span>
-              </span>
-            ) : (
-              <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
-            )}
-            <span class="mark tl is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-            <span class="mark br is-drawn"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-          </span>
-        </a>
-      ))}
+      <!-- Le viseur : moniteur (couvertures empilées) + liste qui le pilote -->
+      <div class="vf" id="vf" data-reveal>
+        <div class="vf__monitor">
+          <div class="vf__screen">
+            {projects.map((p, i) => (
+              <div class:list={["vf__slide", { "is-active": i === 0 }]} data-slide={i} aria-hidden="true">
+                {p.placeholder ? (
+                  <div class="coming-soon">
+                    <div class="coming-soon__grad"></div>
+                    <span class="coming-soon__label">Prochainement</span>
+                  </div>
+                ) : (
+                  <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+                )}
+              </div>
+            ))}
+            <span class="vf__grid" aria-hidden="true"></span>
+          </div>
+          <!-- HUD du viseur -->
+          <span class="mark tl is-drawn" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          <span class="mark br is-drawn" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          <span class="vf__rec" aria-hidden="true"><i></i>REC</span>
+          <span class="vf__now" aria-hidden="true">01 // {total}</span>
+          <span class="vf__tc" aria-hidden="true">00:00:00:00</span>
+        </div>
+
+        <ol class="vf__list">
+          {projects.map((p, i) => (
+            <li class="vf__row" data-category={p.category}>
+              <a
+                class:list={["vf__item", { "is-active": i === 0 }]}
+                data-i={i}
+                data-type={p.placeholder ? "À venir" : p.cardType}
+                href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
+                aria-current={i === 0 ? "true" : undefined}
+              >
+                <span class="vf__num">{String(i + 1).padStart(2, "0")}</span>
+                <span class="vf__title">{p.title}</span>
+                <span class="vf__type">{p.placeholder ? "À venir" : p.cardType}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
     </div>
   </section>
 
@@ -206,97 +220,113 @@ const filters = baseFilters.map((f) => ({
     align-self: flex-start; margin-top: -0.1em;
   }
 
-  /* ---------- LISTE EDITORIALE ----------
-     Les titres portent la page. L'apercu du projet survole suit le curseur,
-     pose en position fixe pour ne pas perturber la mise en page. */
-  .ed {
-    width: min(94vw, 1560px);
-    margin: clamp(24px, 3.6vw, 50px) auto 0;
-    border-top: 1px solid var(--line);
+  /* ---------- LE VISEUR : moniteur + liste des projets ---------- */
+  .vf {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    align-items: center;
+    gap: clamp(26px, 4vw, 64px);
+    margin-top: clamp(20px, 3vw, 40px);
   }
 
-  .ed__row {
+  /* --- Moniteur --- */
+  .vf__monitor {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--bg-deep);
+    border-radius: 2px;
+    box-shadow: 0 30px 80px -30px rgba(0,0,0,0.85);
+  }
+  .vf__screen { position: absolute; inset: 0; overflow: hidden; border-radius: 2px; background: #000; }
+  /* couvertures empilées : une seule visible, les autres prêtes (pas de recharge) */
+  .vf__slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    scale: 1.04;
+    filter: blur(12px) saturate(0.55);
+    transition:
+      opacity 0.45s var(--ease),
+      scale 0.7s var(--ease),
+      filter 0.7s var(--ease);
+  }
+  /* mise au point faite : net, à l'échelle, visible */
+  .vf__slide.is-active { opacity: 1; scale: 1; filter: blur(0) saturate(1); }
+  /* le « focus pull » : on repart flou une fraction de seconde au changement */
+  .vf__screen.is-pulling .vf__slide.is-active { scale: 1.04; filter: blur(12px) saturate(0.55); }
+  .vf__slide :global(video),
+  .vf__slide :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .vf__slide :global(video) { object-fit: cover; display: block; }
+  /* repères de cadrage (règle des tiers), très discrets */
+  .vf__grid {
+    position: absolute; inset: 0; pointer-events: none; opacity: 0.16;
+    background:
+      linear-gradient(to right, transparent 33.33%, rgba(255,255,255,0.5) 33.33%, rgba(255,255,255,0.5) calc(33.33% + 1px), transparent calc(33.33% + 1px)),
+      linear-gradient(to right, transparent 66.66%, rgba(255,255,255,0.5) 66.66%, rgba(255,255,255,0.5) calc(66.66% + 1px), transparent calc(66.66% + 1px)),
+      linear-gradient(to bottom, transparent 33.33%, rgba(255,255,255,0.5) 33.33%, rgba(255,255,255,0.5) calc(33.33% + 1px), transparent calc(33.33% + 1px)),
+      linear-gradient(to bottom, transparent 66.66%, rgba(255,255,255,0.5) 66.66%, rgba(255,255,255,0.5) calc(66.66% + 1px), transparent calc(66.66% + 1px));
+  }
+  /* équerres de visée dans les coins */
+  .vf__monitor .mark { position: absolute; width: 14px; height: 14px; z-index: 3; pointer-events: none; }
+  .vf__monitor .mark.tl { top: 14px; left: 14px; }
+  .vf__monitor .mark.br { bottom: 14px; right: 14px; }
+  /* HUD : REC, compteur, timecode */
+  .vf__rec, .vf__now, .vf__tc {
+    position: absolute; z-index: 3; pointer-events: none;
+    font-family: var(--font-mono); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.6rem;
+    color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,0.8);
+  }
+  .vf__rec { top: 14px; left: 38px; display: inline-flex; align-items: center; gap: 7px; }
+  .vf__rec i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: vf-rec 2s ease-in-out infinite; }
+  @keyframes vf-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+  .vf__now { top: 16px; right: 14px; color: var(--text-muted); }
+  .vf__tc { bottom: 16px; right: 38px; color: var(--text-muted); }
+
+  /* --- Liste des projets (pilote le moniteur) --- */
+  .vf__list { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+  .vf__row { border-bottom: 1px solid var(--line); }
+  .vf__row.is-hidden { display: none; }
+  .vf__item {
     position: relative;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: baseline;
-    column-gap: clamp(16px, 2.4vw, 40px);
-    padding: clamp(16px, 2.2vw, 32px) 2px;
-    border-bottom: 1px solid var(--line);
+    gap: clamp(10px, 1.4vw, 18px);
+    padding: clamp(13px, 1.5vw, 20px) 2px;
   }
-  /* trait accent qui se trace sous la ligne visee */
-  .ed__row::after {
+  /* soulignement accent qui se trace sous l'étape visée */
+  .vf__item::after {
     content: "";
     position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
     background: var(--accent);
     transform: scaleX(0); transform-origin: left;
     transition: transform var(--dur-sign) var(--ease);
   }
-  .ed__row:hover::after, .ed__row:focus-visible::after { transform: scaleX(1); }
-
-  .ed__num {
-    font-family: var(--font-mono); font-weight: 500; font-size: 0.66rem;
-    letter-spacing: 0.12em; color: var(--text-faint);
+  .vf__item.is-active::after { transform: scaleX(1); }
+  .vf__num { font-family: var(--font-mono); font-weight: 500; font-size: 0.66rem; letter-spacing: 0.1em; color: var(--text-faint); transition: color var(--dur-sign) var(--ease); }
+  .vf__item.is-active .vf__num { color: var(--accent); }
+  .vf__title {
+    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.01em; line-height: 1.05;
+    font-size: clamp(1.05rem, 1.9vw, 1.6rem);
+    color: var(--text-faint);
+    transition: color var(--dur-sign) var(--ease), transform var(--dur-sign) var(--ease);
+  }
+  .vf__item.is-active .vf__title { color: var(--text); transform: translateX(4px); }
+  .vf__type {
+    font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.12em; font-size: 0.6rem; color: var(--text-faint);
     transition: color var(--dur-sign) var(--ease);
   }
-  .ed__row:hover .ed__num, .ed__row:focus-visible .ed__num { color: var(--accent); }
+  .vf__item.is-active .vf__type { color: var(--text-muted); }
 
-  .ed__titre {
-    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.01em; line-height: 1.02;
-    font-size: clamp(1.55rem, 4.2vw, 3.5rem);
-    color: var(--text-faint);
-    transition: color var(--dur-sign) var(--ease), transform 0.5s var(--ease);
-  }
-  .ed__row:hover .ed__titre, .ed__row:focus-visible .ed__titre {
-    color: var(--text); transform: translateX(clamp(6px, 1vw, 16px));
-  }
-  /* quand une ligne est visee, les autres reculent */
-  .ed:hover .ed__row:not(:hover) .ed__titre { opacity: 0.42; }
-
-  .ed__meta {
-    font-family: var(--font-mono); text-transform: uppercase;
-    letter-spacing: 0.12em; font-size: 0.58rem; color: var(--text-muted);
-    text-align: right; white-space: nowrap;
+  @media (max-width: 860px) {
+    /* mobile : le moniteur passe au-dessus, la liste dessous */
+    .vf { grid-template-columns: 1fr; gap: 22px; }
   }
 
-  /* --- l'apercu qui suit le curseur --- */
-  .ed__vignette {
-    position: fixed; left: 0; top: 0; z-index: 30;
-    width: clamp(300px, 26vw, 440px);
-    aspect-ratio: 16 / 9;
-    overflow: hidden; border-radius: 2px;
-    background: var(--bg-deep);
-    box-shadow: 0 30px 70px -28px rgba(0,0,0,0.95);
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.32s var(--ease);
-    will-change: transform;
-  }
-  .ed__row:hover .ed__vignette, .ed__row:focus-visible .ed__vignette { opacity: 1; }
-  .ed__vignette :global(video),
-  .ed__vignette :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .ed__vignette :global(video) { object-fit: cover; display: block; }
-  .ed__vignette .mark { position: absolute; width: 12px; height: 12px; z-index: 2; }
-  .ed__vignette .mark.tl { top: 10px; left: 10px; }
-  .ed__vignette .mark.br { bottom: 10px; right: 10px; }
-
-  .ed__row.is-soon .ed__vignette { border: 1px dashed var(--line-strong); }
-  /* hors categorie filtree */
-  .ed__row.is-out { opacity: 0.16; pointer-events: none; }
-
-  @media (max-width: 900px) {
-    /* pas de survol au doigt : l'apercu revient dans le flux, sous le titre */
-    .ed { width: 100%; }
-    .ed__row { grid-template-columns: auto 1fr; row-gap: 12px; }
-    .ed__meta { grid-column: 2; text-align: left; }
-    .ed__vignette {
-      position: static; opacity: 1; width: 100%;
-      grid-column: 1 / -1; margin-top: 4px;
-      box-shadow: 0 18px 44px -26px rgba(0,0,0,0.9);
-    }
-  }
-
-  /* ---------- En coulisses — mini galerie BTS ---------- */
+  /* ---------- En coulisses : mini galerie BTS ---------- */
   .bts {
     background:
       radial-gradient(55% 46% at 0% 50%, rgba(52,98,175,0.22) 0%, rgba(18,18,20,0) 80%),
@@ -313,17 +343,26 @@ const filters = baseFilters.map((f) => ({
 
 <script is:inline>
   (function () {
-    var ed = document.getElementById("ed");
-    if (!ed) return;
+    var vf = document.getElementById("vf");
+    if (!vf) return;
 
     var cats = Array.prototype.slice.call(document.querySelectorAll(".cat"));
     var catsRow = document.querySelector(".cats__row");
     var sigframe = document.querySelector(".cats .sigframe");
-    var rows = Array.prototype.slice.call(ed.querySelectorAll(".ed__row"));
-    var tactile = window.matchMedia("(max-width: 900px)").matches;
-    var selected = "all"; // categorie verrouillee (clic), persiste
+    var screenEl = vf.querySelector(".vf__screen");
+    var slides = Array.prototype.slice.call(vf.querySelectorAll(".vf__slide"));
+    var items = Array.prototype.slice.call(vf.querySelectorAll(".vf__item"));
+    var rows = Array.prototype.slice.call(vf.querySelectorAll(".vf__row"));
+    var tcEl = vf.querySelector(".vf__tc");
+    var nowEl = vf.querySelector(".vf__now");
 
-    // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    var TOTAL = pad(items.length);
+
+    var selected = "all"; // catégorie verrouillée (clic), persiste
+    var current = 0;      // projet actuellement « à l'image »
+
+    // Indicateur signature : le cadre 2 coins enveloppe la catégorie active.
     function moveIndicator(btn) {
       if (!sigframe || !btn) return;
       var PAD = 9;
@@ -332,98 +371,88 @@ const filters = baseFilters.map((f) => ({
       sigframe.style.width = btn.offsetWidth + PAD * 2 + "px";
       sigframe.style.height = btn.offsetHeight + PAD * 2 + "px";
       sigframe.classList.remove("is-drawn");
-      void sigframe.offsetWidth; // reflow, reinitialise le trace
+      void sigframe.offsetWidth; // reflow → réinitialise le tracé
       sigframe.classList.add("is-drawn");
     }
 
-    // ---- L'apercu suit le curseur ----
-    // Position lissee : l'apercu rattrape le curseur au lieu d'y etre colle,
-    // ce qui donne le glissement. Une seule mise a jour par image, en
-    // transform, donc aucun recalcul de mise en page.
-    var souris = { x: 0, y: 0 }, pos = { x: 0, y: 0 };
-    var vignette = null, raf = 0;
+    function videoOf(i) { return slides[i] ? slides[i].querySelector("video") : null; }
 
-    // Pose la vignette a la position courante. Appelee une premiere fois de
-    // maniere synchrone, avant l'affichage : sinon la vignette apparaitrait
-    // une image en haut a gauche avant de rejoindre le curseur.
-    function poser() {
-      if (!vignette) return;
-      var l = vignette.offsetWidth, h = vignette.offsetHeight;
-      // a droite du curseur, sauf si ca sort de l'ecran : alors a gauche
-      var x = pos.x + 30;
-      if (x + l > window.innerWidth - 16) x = pos.x - l - 30;
-      var y = Math.max(16, Math.min(pos.y - h / 2, window.innerHeight - h - 16));
-      vignette.style.transform = "translate3d(" + Math.round(x) + "px," + Math.round(y) + "px,0)";
+    function playCurrent() {
+      var v = videoOf(current);
+      if (!v) return;
+      var p = v.play();
+      if (p && p.catch) p.catch(function () {});
     }
 
-    function placer() {
-      if (!vignette) { raf = 0; return; }
-      pos.x += (souris.x - pos.x) * 0.16;
-      pos.y += (souris.y - pos.y) * 0.16;
-      poser();
-      raf = requestAnimationFrame(placer);
-    }
+    // Mise au point sur le projet i : la couverture bascule dans le moniteur
+    // avec un « focus pull » (flou → net), pilotée par la liste.
+    function activate(i) {
+      if (i === current || !items[i]) return;
+      var prev = videoOf(current);
+      if (prev) prev.pause();
 
-    if (!tactile) {
-      document.addEventListener("mousemove", function (e) {
-        souris.x = e.clientX; souris.y = e.clientY;
-      }, { passive: true });
-    }
-
-    // Lecture au survol uniquement : une seule video a la fois.
-    function arreterTout(sauf) {
-      rows.forEach(function (r) {
-        var v = r.querySelector("video");
-        if (v && v !== sauf) { try { v.pause(); v.currentTime = 0; } catch (e) {} }
+      slides.forEach(function (s, k) { s.classList.toggle("is-active", k === i); });
+      items.forEach(function (a, k) {
+        a.classList.toggle("is-active", k === i);
+        if (k === i) a.setAttribute("aria-current", "true");
+        else a.removeAttribute("aria-current");
       });
+
+      // on repart flou, puis on laisse la transition faire le point
+      screenEl.classList.add("is-pulling");
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { screenEl.classList.remove("is-pulling"); });
+      });
+
+      current = i;
+      if (nowEl) nowEl.textContent = pad(i + 1) + " // " + TOTAL;
+      playCurrent();
     }
 
-    rows.forEach(function (row) {
-      var entrer = function () {
-        if (row.classList.contains("is-out")) return;
-        var v = row.querySelector("video");
-        arreterTout(v);
-        if (v) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-        if (tactile) return;
-        vignette = row.querySelector(".ed__vignette");
-        pos.x = souris.x; pos.y = souris.y; // pas de glissade a l'apparition
-        poser();                            // placee avant d'etre montree
-        if (!raf) raf = requestAnimationFrame(placer);
-      };
-      var sortir = function () {
-        var v = row.querySelector("video");
-        if (v) { try { v.pause(); } catch (e) {} }
-        if (vignette === row.querySelector(".ed__vignette")) {
-          vignette = null;
-          if (raf) { cancelAnimationFrame(raf); raf = 0; }
+    // Timecode : lu sur la vidéo à l'image (HH:MM:SS:FF, base 25 i/s).
+    var raf = 0;
+    function tick() {
+      if (tcEl) {
+        var v = videoOf(current);
+        if (v && !isNaN(v.currentTime)) {
+          var t = v.currentTime;
+          tcEl.textContent =
+            pad(Math.floor(t / 3600)) + ":" + pad(Math.floor(t / 60) % 60) + ":" +
+            pad(Math.floor(t) % 60) + ":" + pad(Math.floor((t % 1) * 25));
+        } else {
+          tcEl.textContent = "--:--:--:--";
         }
-      };
-      row.addEventListener("mouseenter", entrer);
-      row.addEventListener("focus", entrer);
-      row.addEventListener("mouseleave", sortir);
-      row.addEventListener("blur", sortir);
-    });
+      }
+      raf = requestAnimationFrame(tick);
+    }
+    function startTC() { if (!raf) raf = requestAnimationFrame(tick); }
+    function stopTC() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
 
-    // Filtre : les lignes hors categorie s'effacent et sortent du clavier.
+    // Filtre : masque les lignes hors catégorie. Le projet à l'image reste
+    // affiché s'il appartient à la catégorie, sinon on vise le premier.
     function applyFilter(cat) {
-      var visibles = 0;
-      rows.forEach(function (r) {
-        var on = cat === "all" || r.getAttribute("data-category") === cat;
-        if (on) visibles++;
-        r.classList.toggle("is-out", !on);
-        if (on) { r.removeAttribute("tabindex"); r.removeAttribute("aria-hidden"); }
-        else {
-          r.setAttribute("tabindex", "-1");
-          r.setAttribute("aria-hidden", "true");
-          var v = r.querySelector("video"); if (v) v.pause();
+      var firstVisible = -1, currentVisible = false;
+      rows.forEach(function (r, i) {
+        var match = cat === "all" || r.getAttribute("data-category") === cat;
+        r.classList.toggle("is-hidden", !match);
+        if (match) {
+          if (firstVisible < 0) firstVisible = i;
+          if (i === current) currentVisible = true;
         }
       });
-      // categorie sans projet : on reaffiche tout plutot qu'une liste vide
-      if (!visibles) rows.forEach(function (r) {
-        r.classList.remove("is-out");
-        r.removeAttribute("tabindex"); r.removeAttribute("aria-hidden");
-      });
+      // catégorie sans projet → on réaffiche tout (pas de liste vide)
+      if (firstVisible < 0) {
+        rows.forEach(function (r) { r.classList.remove("is-hidden"); });
+        return;
+      }
+      if (!currentVisible) activate(firstVisible);
     }
+
+    // La liste pilote le moniteur (survol + clavier). Le clic suit le lien.
+    items.forEach(function (a, i) {
+      a.addEventListener("mouseenter", function () { activate(i); });
+      a.addEventListener("focus", function () { activate(i); });
+    });
 
     function syncPressed() {
       cats.forEach(function (b) {
@@ -440,6 +469,7 @@ const filters = baseFilters.map((f) => ({
         syncPressed(); moveIndicator(btn); applyFilter(selected);
       });
     });
+    // quitter la rangée → revenir à la sélection verrouillée
     if (catsRow) catsRow.addEventListener("mouseleave", function () {
       moveIndicator(document.querySelector('.cat[aria-pressed="true"]') || cats[0]);
       applyFilter(selected);
@@ -454,11 +484,17 @@ const filters = baseFilters.map((f) => ({
     window.addEventListener("resize", place);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
 
-    // Rien ne tourne quand la section est hors champ.
+    // Lecture + timecode uniquement quand la section est visible (perf).
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { if (!e.isIntersecting) arreterTout(null); });
-      }, { threshold: 0.05 }).observe(ed);
-    }
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { playCurrent(); startTC(); }
+          else {
+            stopTC();
+            slides.forEach(function (s) { var v = s.querySelector("video"); if (v) v.pause(); });
+          }
+        });
+      }, { threshold: 0.15 }).observe(vf);
+    } else { playCurrent(); startTC(); }
   })();
 </script>
