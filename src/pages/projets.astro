@@ -49,6 +49,19 @@ const tcMarks = [
   { x: 75, l: "01:30" }, { x: 100, l: "02:00" },
 ];
 
+// Composition de la mosaique : chaque projet occupe des colonnes precises
+// d'une grille de 12, avec un decalage vertical propre. Trois bandes de deux,
+// dont les colonnes ne se chevauchent jamais. Le vide fait partie du dessin :
+// c'est lui qui donne l'air compose plutot que tabulaire.
+const mosaique = [
+  { col: "1 / 8",   decal: 0,   ar: "16 / 9" },
+  { col: "9 / 13",  decal: 96,  ar: "3 / 2"  },
+  { col: "3 / 10",  decal: 44,  ar: "16 / 9" },
+  { col: "10 / 13", decal: 0,   ar: "4 / 5"  },
+  { col: "1 / 6",   decal: 34,  ar: "3 / 2"  },
+  { col: "7 / 13",  decal: 92,  ar: "16 / 9" },
+];
+
 const counts: Record<string, number> = { all: projects.length };
 for (const p of projects) counts[p.category] = (counts[p.category] || 0) + 1;
 const filters = baseFilters.map((f) => ({
@@ -95,38 +108,37 @@ const filters = baseFilters.map((f) => ({
 
     </div>
 
-    <!-- Mur de regie : six moniteurs en lecture, un seul a l'antenne.
-         Place hors du conteneur pour gagner la largeur des marges. -->
-    <div class="wall" id="wall" data-reveal>
-        {projects.map((p, i) => (
-          <a
-            class:list={["wall__mon", { "is-live": i === 0, "is-soon": p.placeholder }]}
-            data-i={i}
-            data-category={p.category}
-            href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
-            aria-label={`${p.title}, ${p.placeholder ? "a venir" : p.cardType}`}
-            aria-current={i === 0 ? "true" : undefined}
-          >
-            <span class="wall__screen">
-              {p.placeholder ? (
-                <span class="coming-soon">
-                  <span class="coming-soon__grad"></span>
-                  <span class="coming-soon__label">Prochainement</span>
-                </span>
-              ) : (
-                <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
-              )}
-              <span class="wall__scan" aria-hidden="true"></span>
-              <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-              <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-              <span class="wall__num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
-              <span class="wall__live" aria-hidden="true"><i></i>Live</span>
-              <span class="wall__tc" aria-hidden="true">00:00:00</span>
+    <!-- Mosaique : composition asymetrique, une bande de deux par rangee.
+         Placee hors du conteneur pour gagner la largeur des marges. -->
+    <div class="mo" id="mo" data-reveal>
+      {projects.map((p, i) => (
+        <a
+          class:list={["mo__item", { "is-soon": p.placeholder }]}
+          style={`--col:${mosaique[i].col};--decal:${mosaique[i].decal}px;--ar:${mosaique[i].ar}`}
+          data-i={i}
+          data-category={p.category}
+          href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
+          aria-label={`${p.title}, ${p.placeholder ? "a venir" : p.cardType}`}
+        >
+          <span class="mo__frame">
+            {p.placeholder ? (
+              <span class="coming-soon">
+                <span class="coming-soon__grad"></span>
+                <span class="coming-soon__label">Prochainement</span>
+              </span>
+            ) : (
+              <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+            )}
+            <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+            <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+          </span>
+          <span class="mo__cap">
+            <span class="mo__num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+            <span class="mo__titre">{p.title}</span>
+            <span class="mo__meta">
+              {p.placeholder ? "A venir" : p.cardType}{p.year ? " · " + p.year : ""}
             </span>
-            <span class="wall__cap">
-              <span class="wall__title">{p.title}</span>
-              <span class="wall__type">{p.placeholder ? "A venir" : p.cardType}</span>
-            </span>
+          </span>
         </a>
       ))}
     </div>
@@ -210,116 +222,101 @@ const filters = baseFilters.map((f) => ({
     align-self: flex-start; margin-top: -0.1em;
   }
 
-  /* ---------- MUR DE REGIE : six moniteurs, un seul a l'antenne ---------- */
-  .wall {
+  /* ---------- MOSAIQUE : composition asymetrique ----------
+     Grille de 12 colonnes, trois bandes de deux projets. Les largeurs et les
+     decalages verticaux viennent des donnees, pas du CSS : c'est ce qui donne
+     une page composee plutot qu'un tableau regulier. */
+  .mo {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    /* plus large que le conteneur : on récupère les marges laterales */
+    grid-template-columns: repeat(12, 1fr);
+    align-items: start;
+    gap: clamp(30px, 4.5vw, 74px) clamp(16px, 2.2vw, 38px);
     width: min(94vw, 1560px);
-    margin-inline: auto;
-    gap: clamp(18px, 2.4vw, 38px);
-    margin-top: clamp(22px, 3.2vw, 44px);
+    margin: clamp(26px, 4vw, 56px) auto 0;
   }
 
-  .wall__mon {
+  .mo__item {
+    grid-column: var(--col);
+    margin-top: var(--decal, 0);
     display: block;
-    transition: transform 0.45s var(--ease), opacity var(--dur-sign) var(--ease);
+    transition: opacity var(--dur-sign) var(--ease);
   }
-  /* l'ecran lui meme */
-  .wall__screen {
+
+  .mo__frame {
     position: relative; display: block;
-    aspect-ratio: 16 / 9; overflow: hidden;
-    border-radius: 2px; background: #05050a;
-    border: 1px solid var(--line);
-    box-shadow: 0 16px 40px -24px rgba(0,0,0,0.9);
-    transition:
-      border-color var(--dur-sign) var(--ease),
-      box-shadow var(--dur-sign) var(--ease);
+    aspect-ratio: var(--ar, 16 / 9);
+    overflow: hidden; border-radius: 2px;
+    background: var(--bg-deep);
+    box-shadow: 0 22px 54px -30px rgba(0,0,0,0.9);
+    transition: box-shadow 0.55s var(--ease);
   }
-  .wall__screen :global(video),
-  .wall__screen :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .wall__screen :global(video) {
+  .mo__frame :global(video),
+  .mo__frame :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .mo__frame :global(video) {
     object-fit: cover; display: block;
-    /* au repos : moniteur de controle, sombre et desature */
-    filter: grayscale(0.85) brightness(0.42) contrast(1.05);
-    transition: filter 0.5s var(--ease);
+    /* au repos : retenu et desature. La couleur revient au survol. */
+    filter: grayscale(0.7) brightness(0.62);
+    transform: scale(1.02);
+    transition: filter 0.6s var(--ease), transform 0.7s var(--ease);
   }
-  /* lignes de balayage tres discretes, pour la texture moniteur */
-  .wall__scan {
-    position: absolute; inset: 0; pointer-events: none; opacity: 0.5;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(255,255,255,0.035) 0 1px,
-      rgba(0,0,0,0) 1px 3px
-    );
+  .mo__item:hover .mo__frame :global(video),
+  .mo__item:focus-visible .mo__frame :global(video) {
+    filter: grayscale(0) brightness(1);
+    transform: scale(1.05);
   }
+  .mo__item:hover .mo__frame,
+  .mo__item:focus-visible .mo__frame { box-shadow: 0 34px 70px -26px rgba(0,0,0,0.95); }
+  .mo__item.is-soon .mo__frame { border: 1px dashed var(--line-strong); }
 
-  /* --- le moniteur a l'antenne --- */
-  .wall__mon.is-live { transform: scale(1.03); z-index: 5; }
-  .wall__mon.is-live .wall__screen {
-    border-color: var(--accent-border);
-    box-shadow: 0 0 0 1px rgba(255,30,99,0.35), 0 26px 60px -22px var(--accent-glow);
-  }
-  .wall__mon.is-live .wall__screen :global(video) {
-    filter: grayscale(0) brightness(1) contrast(1);
-  }
-  /* les autres reculent encore quand la souris est sur le mur */
-  .wall:hover .wall__mon:not(.is-live) { opacity: 0.55; }
+  /* equerres de visee : tracees au survol seulement */
+  .mo__frame .mark { position: absolute; width: 13px; height: 13px; z-index: 2; }
+  .mo__frame .mark.tl { top: 11px; left: 11px; }
+  .mo__frame .mark.br { bottom: 11px; right: 11px; }
+  .mo__frame .mark .arm-h { transform: scaleX(0); }
+  .mo__frame .mark .arm-v { transform: scaleY(0); }
+  .mo__item:hover .mo__frame .mark .arm-h,
+  .mo__item:focus-visible .mo__frame .mark .arm-h { transform: scaleX(1); transition: transform var(--dur-sign) var(--ease); }
+  .mo__item:hover .mo__frame .mark .arm-v,
+  .mo__item:focus-visible .mo__frame .mark .arm-v { transform: scaleY(1); transition: transform var(--dur-sign) var(--ease); }
 
-  /* --- incrustations facon regie --- */
-  .wall__num, .wall__live, .wall__tc {
-    position: absolute; z-index: 3; pointer-events: none;
-    font-family: var(--font-mono); font-weight: 500;
-    text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.55rem;
-    text-shadow: 0 1px 5px rgba(0,0,0,0.9);
+  /* legende : le numero en colonne, le titre et la meta a cote */
+  .mo__cap {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 12px;
+    align-items: baseline;
+    margin-top: 14px;
   }
-  .wall__num { top: 9px; left: 10px; color: var(--text-muted); }
-  .wall__live {
-    top: 9px; right: 10px; color: var(--text);
-    display: inline-flex; align-items: center; gap: 6px;
-    opacity: 0; transition: opacity var(--dur-sign) var(--ease);
+  .mo__num {
+    grid-row: span 2;
+    font-family: var(--font-mono); font-weight: 500; font-size: 0.6rem;
+    letter-spacing: 0.14em; color: var(--accent);
   }
-  .wall__live i {
-    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-    animation: wall-rec 1.9s ease-in-out infinite;
-  }
-  @keyframes wall-rec { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
-  .wall__tc {
-    bottom: 9px; right: 10px; color: var(--text-muted);
-    opacity: 0; transition: opacity var(--dur-sign) var(--ease);
-  }
-  .wall__mon.is-live .wall__live, .wall__mon.is-live .wall__tc { opacity: 1; }
-
-  /* equerres de visee : tracees seulement sur le moniteur a l'antenne */
-  .wall__screen .mark { position: absolute; width: 12px; height: 12px; z-index: 3; }
-  .wall__screen .mark.tl { top: 9px; left: 9px; }
-  .wall__screen .mark.br { bottom: 9px; right: 9px; }
-  .wall__screen .mark .arm-h { transform: scaleX(0); }
-  .wall__screen .mark .arm-v { transform: scaleY(0); }
-  .wall__mon.is-live .wall__screen .mark .arm-h { transform: scaleX(1); transition: transform var(--dur-sign) var(--ease); }
-  .wall__mon.is-live .wall__screen .mark .arm-v { transform: scaleY(1); transition: transform var(--dur-sign) var(--ease); }
-  /* le numero laisse la place aux equerres quand elles se tracent */
-  .wall__mon.is-live .wall__num { opacity: 0; transition: opacity var(--dur-sign) var(--ease); }
-
-  /* --- legende sous l'ecran --- */
-  .wall__cap { display: grid; gap: 1px; margin-top: 9px; }
-  .wall__title {
+  .mo__titre {
     font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-    font-size: clamp(0.72rem, 1vw, 0.92rem); line-height: 1.15;
-    color: var(--text-faint); transition: color var(--dur-sign) var(--ease);
+    font-size: clamp(0.9rem, 1.35vw, 1.25rem); line-height: 1.15;
+    color: var(--text-faint);
+    transition: color var(--dur-sign) var(--ease);
   }
-  .wall__mon.is-live .wall__title { color: var(--text); }
-  .wall__type {
-    font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.12em;
-    font-size: 0.52rem; color: var(--text-muted);
+  .mo__item:hover .mo__titre,
+  .mo__item:focus-visible .mo__titre { color: var(--text); }
+  .mo__meta {
+    grid-column: 2;
+    font-family: var(--font-mono); text-transform: uppercase;
+    letter-spacing: 0.12em; font-size: 0.56rem; color: var(--text-muted);
+    margin-top: 3px;
   }
-  .wall__mon.is-soon .wall__screen { border-style: dashed; }
-  /* hors categorie filtree */
-  .wall__mon.is-out { opacity: 0.16; pointer-events: none; }
-  .wall__mon.is-out.is-live { transform: none; }
 
-  @media (max-width: 860px) { .wall { grid-template-columns: repeat(2, 1fr); } }
-  @media (max-width: 520px) { .wall { grid-template-columns: 1fr; } }
+  /* hors categorie filtree */
+  .mo__item.is-out { opacity: 0.14; pointer-events: none; }
+
+  @media (max-width: 900px) {
+    /* la composition n'a plus de sens sur une colonne : on empile, sans decalage */
+    .mo { grid-template-columns: 1fr; width: 100%; gap: clamp(26px, 6vw, 44px); }
+    .mo__item { grid-column: 1 !important; margin-top: 0 !important; }
+    .mo__frame { aspect-ratio: 16 / 9 !important; }
+  }
+
   /* ---------- En coulisses — mini galerie BTS ---------- */
   .bts {
     background:
@@ -337,19 +334,14 @@ const filters = baseFilters.map((f) => ({
 
 <script is:inline>
   (function () {
-    var wall = document.getElementById("wall");
-    if (!wall) return;
+    var mo = document.getElementById("mo");
+    if (!mo) return;
 
     var cats = Array.prototype.slice.call(document.querySelectorAll(".cat"));
     var catsRow = document.querySelector(".cats__row");
     var sigframe = document.querySelector(".cats .sigframe");
-    var mons = Array.prototype.slice.call(wall.querySelectorAll(".wall__mon"));
-    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var small = function () { return window.matchMedia("(max-width: 760px)").matches; };
-
+    var items = Array.prototype.slice.call(mo.querySelectorAll(".mo__item"));
     var selected = "all"; // categorie verrouillee (clic), persiste
-    var live = 0;         // moniteur a l'antenne
-    var onScreen = false;
 
     // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
     function moveIndicator(btn) {
@@ -364,89 +356,49 @@ const filters = baseFilters.map((f) => ({
       sigframe.classList.add("is-drawn");
     }
 
-    function videoOf(i) { return mons[i] ? mons[i].querySelector("video") : null; }
-
-    // Tous les moniteurs tournent en meme temps : c'est le principe du mur.
-    // On ne lance rien hors champ, ni au doigt (batterie), ni en reduced-motion.
-    function playAll() {
-      if (!onScreen || reduce || small()) return;
-      mons.forEach(function (m) {
-        if (m.classList.contains("is-out")) return;
-        var v = m.querySelector("video");
-        if (!v) return;
+    // Lecture au survol uniquement : une seule video a la fois. C'est plus
+    // calme qu'une page ou tout bouge, et ca laisse le processeur libre pour
+    // les transitions entre pages.
+    function arreterTout(sauf) {
+      items.forEach(function (it) {
+        var v = it.querySelector("video");
+        if (v && v !== sauf) { try { v.pause(); v.currentTime = 0; } catch (e) {} }
+      });
+    }
+    items.forEach(function (it) {
+      var v = it.querySelector("video");
+      if (!v) return;
+      var lire = function () {
+        if (it.classList.contains("is-out")) return;
+        arreterTout(v);
         var pr = v.play();
         if (pr && pr.catch) pr.catch(function () {});
-      });
-    }
-    function pauseAll() {
-      mons.forEach(function (m) {
-        var v = m.querySelector("video");
-        if (v) v.pause();
-      });
-    }
-
-    // Passe le moniteur i a l'antenne.
-    function goLive(i) {
-      if (i === live || !mons[i] || mons[i].classList.contains("is-out")) return;
-      live = i;
-      mons.forEach(function (m, k) {
-        m.classList.toggle("is-live", k === i);
-        if (k === i) m.setAttribute("aria-current", "true");
-        else m.removeAttribute("aria-current");
-      });
-    }
-
-    // Timecode du moniteur a l'antenne, lu sur sa propre video.
-    var raf = 0, lastTC = "";
-    function pad(n) { return (n < 10 ? "0" : "") + n; }
-    function tick() {
-      var m = mons[live];
-      var el = m ? m.querySelector(".wall__tc") : null;
-      if (el) {
-        var v = m.querySelector("video");
-        var txt = "00:00:00";
-        if (v && !isNaN(v.currentTime)) {
-          var t = v.currentTime;
-          txt = pad(Math.floor(t / 60) % 60) + ":" + pad(Math.floor(t) % 60) + ":" + pad(Math.floor((t % 1) * 25));
-        }
-        if (txt !== lastTC) { lastTC = txt; el.textContent = txt; }
-      }
-      raf = requestAnimationFrame(tick);
-    }
-    function startTC() { if (!raf) raf = requestAnimationFrame(tick); }
-    function stopTC() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
-
-    // Le survol (ou le focus clavier) bascule l'antenne. Le clic suit le lien.
-    mons.forEach(function (m, i) {
-      m.addEventListener("mouseenter", function () { goLive(i); });
-      m.addEventListener("focus", function () { goLive(i); });
+      };
+      it.addEventListener("mouseenter", lire);
+      it.addEventListener("focus", lire);
+      it.addEventListener("mouseleave", function () { try { v.pause(); } catch (e) {} });
+      it.addEventListener("blur", function () { try { v.pause(); } catch (e) {} });
     });
 
-    // Filtre : les moniteurs hors categorie s'eteignent et sortent du clavier.
+    // Filtre : les projets hors categorie s'effacent et sortent du clavier.
     function applyFilter(cat) {
-      var first = -1;
-      mons.forEach(function (m, i) {
-        var on = cat === "all" || m.getAttribute("data-category") === cat;
-        m.classList.toggle("is-out", !on);
-        if (on) {
-          if (first < 0) first = i;
-          m.removeAttribute("tabindex"); m.removeAttribute("aria-hidden");
-        } else {
-          m.setAttribute("tabindex", "-1"); m.setAttribute("aria-hidden", "true");
-          var v = m.querySelector("video"); if (v) v.pause();
+      var visible = 0;
+      items.forEach(function (it) {
+        var on = cat === "all" || it.getAttribute("data-category") === cat;
+        if (on) visible++;
+        it.classList.toggle("is-out", !on);
+        if (on) { it.removeAttribute("tabindex"); it.removeAttribute("aria-hidden"); }
+        else {
+          it.setAttribute("tabindex", "-1");
+          it.setAttribute("aria-hidden", "true");
+          var v = it.querySelector("video"); if (v) v.pause();
         }
       });
-      // categorie sans projet : on rallume tout (pas de mur eteint)
-      if (first < 0) {
-        mons.forEach(function (m) {
-          m.classList.remove("is-out");
-          m.removeAttribute("tabindex"); m.removeAttribute("aria-hidden");
-        });
-        playAll();
-        return;
-      }
-      if (mons[live].classList.contains("is-out")) goLive(first);
-      playAll();
+      // categorie sans projet : on reaffiche tout plutot qu'une page vide
+      if (!visible) items.forEach(function (it) {
+        it.classList.remove("is-out");
+        it.removeAttribute("tabindex"); it.removeAttribute("aria-hidden");
+      });
     }
 
     function syncPressed() {
@@ -478,15 +430,11 @@ const filters = baseFilters.map((f) => ({
     window.addEventListener("resize", place);
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
 
-    // Le mur ne tourne que quand il est a l'ecran.
+    // Rien ne tourne quand la section est hors champ.
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          onScreen = e.isIntersecting;
-          if (onScreen) { playAll(); startTC(); }
-          else { pauseAll(); stopTC(); }
-        });
-      }, { threshold: 0.1 }).observe(wall);
-    } else { onScreen = true; playAll(); startTC(); }
+        entries.forEach(function (e) { if (!e.isIntersecting) arreterTout(null); });
+      }, { threshold: 0.05 }).observe(mo);
+    }
   })();
 </script>
