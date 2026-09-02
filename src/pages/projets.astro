@@ -1,11 +1,11 @@
 ---
 /**
- * Projets : en-tête à fond vidéo, moniteur pilote par la liste des projets.
- * « roue de cartes » : catégories au-dessus (déclencheurs au survol),
- * cartes en éventail/arc en bas. Au survol d'une catégorie : spin rapide +
- * les projets de la catégorie grandissent au centre, les autres reculent.
- * Cartes en vignette statique (perf). Dégradés bleus en arrière-plan.
- * 6 projets. Contenus = PLACEHOLDERS.
+ * Projets : en-tête à fond vidéo, puis « l'affiche ».
+ * Un grand cadre montre un seul projet à la fois (le programme) ; la rangée
+ * de vignettes en dessous sert de sélection. Survol d'une vignette : le cadre
+ * bascule en fondu et le bloc de texte se remet à jour. Clic : on entre dans
+ * le projet. Les catégories au-dessus filtrent la rangée.
+ * 6 projets, dont 3 « à venir » (placeholders, sans page détaillée).
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SouvenirsBoard from "../components/SouvenirsBoard.astro";
@@ -95,21 +95,17 @@ const filters = baseFilters.map((f) => ({
 
     </div>
 
-    </div>
+    <!-- L'AFFICHE : un grand cadre (le programme) piloté par la rangée de
+         vignettes. Survol d'une vignette = le cadre bascule, clic = on entre.
+         Hors de .container pour occuper toute la largeur utile. -->
+    <div class="af" id="af" data-reveal>
 
-    <!-- Accordeon : six bandes verticales, celle qui est visee s'ouvre.
-         Hors du conteneur pour occuper toute la largeur utile. -->
-    <div class="ac" id="ac" data-reveal>
-      {projects.map((p, i) => (
-        <a
-          class:list={["ac__band", { "is-open": i === 0, "is-soon": p.placeholder }]}
-          data-i={i}
-          data-category={p.category}
-          href={p.placeholder ? "/projets" : `/projets/${p.slug}`}
-          aria-label={`${p.title}, ${p.placeholder ? "a venir" : p.cardType}`}
-          aria-current={i === 0 ? "true" : undefined}
-        >
-          <span class="ac__media">
+      <div class="af__scene">
+        {projects.map((p, i) => (
+          <div
+            class:list={["af__plan", { "is-on": i === 0 }]}
+            aria-hidden={i === 0 ? undefined : "true"}
+          >
             {p.placeholder ? (
               <span class="coming-soon">
                 <span class="coming-soon__grad"></span>
@@ -118,26 +114,74 @@ const filters = baseFilters.map((f) => ({
             ) : (
               <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
             )}
-          </span>
-          <span class="ac__voile" aria-hidden="true"></span>
+          </div>
+        ))}
 
-          <span class="ac__num" aria-hidden="true">{String(i + 1).padStart(2, "0")}</span>
+        <span class="af__voile" aria-hidden="true"></span>
+        <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
+        <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
 
-          {/* titre vertical quand la bande est fermee */}
-          <span class="ac__vtitre" aria-hidden="true"><span>{p.title}</span></span>
+        <div class="af__info">
+          <p class="af__compte" aria-hidden="true"><span id="afNum">01</span> / {total}</p>
+          <h2 class="af__titre" id="afTitre">{projects[0].title}</h2>
+          <p class="af__meta" id="afMeta">
+            {projects[0].cardType}{projects[0].year ? " · " + projects[0].year : ""}
+          </p>
+          <a class="af__lien" id="afLien" href={`/projets/${projects[0].slug}`}>
+            <span>Voir le projet</span>
+            <i class="af__fleche" aria-hidden="true"></i>
+          </a>
+        </div>
+      </div>
 
-          {/* bloc horizontal quand elle est ouverte */}
-          <span class="ac__ouvert">
-            <span class="ac__titre">{p.title}</span>
-            <span class="ac__meta">
-              {p.placeholder ? "A venir" : p.cardType}{p.year ? " · " + p.year : ""}
-            </span>
-          </span>
-
-          <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-          <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-        </a>
-      ))}
+      <div class="af__rang">
+        {projects.map((p, i) => {
+          const meta = p.placeholder
+            ? "À venir"
+            : p.cardType + (p.year ? " · " + p.year : "");
+          const num = String(i + 1).padStart(2, "0");
+          const dedans = (
+            <>
+              <span class="af__vigMedia">
+                {p.placeholder ? (
+                  <span class="coming-soon"><span class="coming-soon__grad"></span></span>
+                ) : (
+                  <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+                )}
+              </span>
+              <span class="af__vigVoile" aria-hidden="true"></span>
+              <span class="af__vigNum" aria-hidden="true">{num}</span>
+              <span class="af__vigBas">
+                <span class="af__vigTitre">{p.title}</span>
+                <span class="af__vigTag">{p.placeholder ? "À venir" : p.cardType}</span>
+              </span>
+            </>
+          );
+          return p.placeholder ? (
+            <button
+              class:list={["af__vig", "is-soon", { "is-on": i === 0 }]}
+              type="button"
+              data-category={p.category}
+              data-titre={p.title}
+              data-meta={meta}
+              data-href=""
+              aria-label={`${p.title}, à venir`}
+              aria-current={i === 0 ? "true" : undefined}
+            >{dedans}</button>
+          ) : (
+            <a
+              class:list={["af__vig", { "is-on": i === 0 }]}
+              href={`/projets/${p.slug}`}
+              data-category={p.category}
+              data-titre={p.title}
+              data-meta={meta}
+              data-href={`/projets/${p.slug}`}
+              aria-label={`${p.title}, ${p.cardType}`}
+              aria-current={i === 0 ? "true" : undefined}
+            >{dedans}</a>
+          );
+        })}
+      </div>
     </div>
   </section>
 
@@ -219,115 +263,195 @@ const filters = baseFilters.map((f) => ({
     align-self: flex-start; margin-top: -0.1em;
   }
 
-  /* ---------- ACCORDEON : six bandes verticales ----------
-     Ni grille ni liste. Les six projets remplissent l'ecran d'un coup, sans
-     defilement. La bande visee s'ouvre, les autres se resserrent. Les projets
-     a venir restent des bandes fines : ils meublent au lieu de faire des trous. */
-  .ac {
-    display: flex;
-    gap: 6px;
-    height: clamp(400px, 62vh, 660px);
+  /* ---------- L'AFFICHE : grand cadre + rangée de vignettes ----------
+     Un seul projet occupe le grand cadre, la rangée sert de sélection.
+     L'échelle est dans l'image et dans le titre, pas dans les bordures. */
+  .af {
     width: min(94vw, 1560px);
     margin: clamp(24px, 3.6vw, 48px) auto 0;
   }
 
-  .ac__band {
+  /* --- le grand cadre (le « programme ») --- */
+  .af__scene {
     position: relative;
-    flex: 1 1 0;
-    min-width: 0;
+    width: 100%;
+    aspect-ratio: 12 / 5;
+    max-height: 46vh;
     overflow: hidden;
     border-radius: 2px;
     background: var(--bg-deep);
-    /* c'est la croissance qui s'anime : une seule propriete, tout le reste suit */
-    transition: flex-grow 0.65s var(--ease), opacity var(--dur-sign) var(--ease);
   }
-  .ac__band.is-open { flex-grow: 4.4; }
-
-  .ac__media { position: absolute; inset: 0; display: block; }
-  .ac__media :global(video),
-  .ac__media :global(.coming-soon) { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .ac__media :global(video) {
-    object-fit: cover; display: block;
-    /* on garde les couleurs : juste un rien de retenue quand la bande est fermee */
-    filter: brightness(0.82);
-    transition: filter 0.6s var(--ease);
+  /* un calque par projet, empilés : seul le courant est visible */
+  .af__plan {
+    position: absolute; inset: 0;
+    opacity: 0; scale: 1.045;
+    transition: opacity 0.5s var(--ease), scale 0.9s var(--ease);
   }
-  .ac__band.is-open .ac__media :global(video) { filter: brightness(1); }
+  .af__plan.is-on { opacity: 1; scale: 1; }
+  .af__plan :global(video),
+  .af__plan :global(.coming-soon) {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .af__plan :global(video) { object-fit: cover; display: block; }
 
-  /* voile bas, uniquement pour que le texte reste lisible sur l'image */
-  .ac__voile {
+  /* voile : lisibilité du texte, plus dense en bas à gauche */
+  .af__voile {
     position: absolute; inset: 0; pointer-events: none;
-    background: linear-gradient(to top, rgba(8,8,11,0.88) 0%, rgba(8,8,11,0.25) 34%, rgba(8,8,11,0) 62%);
+    background:
+      linear-gradient(to top, rgba(8,8,11,0.90) 0%, rgba(8,8,11,0.34) 30%, rgba(8,8,11,0) 60%),
+      linear-gradient(to right, rgba(8,8,11,0.62) 0%, rgba(8,8,11,0) 46%);
   }
 
-  .ac__num {
-    position: absolute; top: 16px; left: 0; right: 0; text-align: center;
-    font-family: var(--font-mono); font-weight: 500; font-size: 0.58rem;
+  .af__scene .mark { position: absolute; width: 16px; height: 16px; z-index: 3; }
+  .af__scene .mark.tl { top: 16px; left: 16px; }
+  .af__scene .mark.br { bottom: 16px; right: 16px; }
+
+  /* --- le bloc de texte, en bas à gauche du cadre --- */
+  .af__info {
+    position: absolute; z-index: 4;
+    left: clamp(18px, 2.6vw, 44px);
+    right: clamp(18px, 2.6vw, 44px);
+    bottom: clamp(16px, 2.2vw, 36px);
+    display: grid; gap: 6px; justify-items: start;
+    transition: opacity 0.38s var(--ease), transform 0.38s var(--ease);
+  }
+  /* pendant la bascule : le texte sort, se met à jour, revient */
+  .af__info.is-out {
+    opacity: 0; transform: translateY(10px);
+    transition-duration: 0.17s;
+  }
+  .af__compte {
+    font-family: var(--font-mono); font-weight: 500;
+    font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-muted);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
+  .af__compte :global(span) { color: var(--accent); }
+  .af__titre {
+    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
+    font-size: clamp(1.9rem, 5.4vw, 5rem); line-height: 1;
+    letter-spacing: -0.01em; color: var(--text);
+    text-shadow: 0 2px 26px rgba(0,0,0,0.62);
+    max-width: 15ch;
+  }
+  .af__meta {
+    font-family: var(--font-mono); text-transform: uppercase;
+    letter-spacing: 0.14em; font-size: 0.62rem; color: var(--text-muted);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
+  .af__lien {
+    display: inline-flex; align-items: center; gap: 0.7em;
+    margin-top: clamp(6px, 0.9vw, 14px);
+    font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text);
+    padding-bottom: 4px; border-bottom: 1px solid var(--line-strong);
+    transition: color var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease);
+  }
+  .af__lien[hidden] { display: none; }
+  .af__lien:hover { color: var(--accent); border-color: var(--accent); }
+  .af__fleche {
+    width: 16px; height: 1.5px; background: currentColor; position: relative;
+    transition: transform var(--dur-sign) var(--ease);
+  }
+  .af__fleche::after {
+    content: ""; position: absolute; right: 0; top: -3px;
+    width: 7px; height: 1.5px; background: currentColor;
+    transform: rotate(42deg); transform-origin: right center;
+  }
+  .af__lien:hover .af__fleche { transform: translateX(5px); }
+
+  /* --- la rangée de vignettes (la sélection) --- */
+  .af__rang {
+    display: flex; gap: 6px;
+    height: clamp(190px, 30vh, 300px);
+    margin-top: 6px;
+  }
+  .af__vig {
+    position: relative;
+    flex: 1 1 0; min-width: 0; height: 100%;
+    overflow: hidden; border-radius: 2px;
+    background: var(--bg-deep);
+    text-align: left;
+    /* remise a zero : les vignettes sont tantot <a>, tantot <button> (a venir),
+       il faut qu'elles fassent exactement la meme largeur */
+    display: block; appearance: none; -webkit-appearance: none;
+    border: 0; padding: 0; margin: 0;
+    font: inherit; color: inherit; cursor: pointer;
+    transition: flex-grow 0.5s var(--ease);
+  }
+  .af__vig.is-out { display: none; }
+
+  .af__vigMedia { position: absolute; inset: 0; display: block; }
+  .af__vigMedia :global(video),
+  .af__vigMedia :global(.coming-soon) {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+  }
+  .af__vigMedia :global(video) {
+    object-fit: cover; display: block;
+    /* au repos les vignettes sont en retrait : une seule chose est allumée */
+    filter: brightness(0.5);
+    scale: 1;
+    transition: filter 0.5s var(--ease), scale 0.9s var(--ease);
+  }
+  .af__vig:hover .af__vigMedia :global(video) { filter: brightness(0.78); scale: 1.04; }
+  .af__vig.is-on .af__vigMedia :global(video) { filter: brightness(1); scale: 1; }
+
+  .af__vigVoile {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to top, rgba(8,8,11,0.88) 0%, rgba(8,8,11,0.18) 42%, rgba(8,8,11,0) 68%);
+  }
+  .af__vigNum {
+    position: absolute; top: 12px; left: 12px;
+    font-family: var(--font-mono); font-weight: 500; font-size: 0.56rem;
     letter-spacing: 0.16em; color: var(--text-muted);
     text-shadow: 0 1px 5px rgba(0,0,0,0.9);
     transition: color var(--dur-sign) var(--ease);
   }
-  .ac__band.is-open .ac__num { color: var(--accent); }
+  .af__vig.is-on .af__vigNum { color: var(--accent); }
 
-  /* --- titre vertical, bande fermee --- */
-  .ac__vtitre {
-    position: absolute; left: 0; right: 0; bottom: 22px;
-    display: flex; justify-content: center;
-    opacity: 1; transition: opacity 0.35s var(--ease);
+  .af__vigBas {
+    position: absolute; left: 12px; right: 12px; bottom: 12px;
+    display: grid; gap: 3px;
   }
-  .ac__vtitre span {
-    writing-mode: vertical-rl;
-    transform: rotate(180deg); /* se lit de bas en haut */
+  .af__vigTitre {
     font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.06em; font-size: clamp(0.72rem, 0.95vw, 0.9rem);
-    color: var(--text); white-space: nowrap;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    font-size: clamp(0.66rem, 0.86vw, 0.84rem); line-height: 1.15;
+    color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    overflow: hidden;
   }
-  .ac__band.is-open .ac__vtitre { opacity: 0; }
-
-  /* --- bloc horizontal, bande ouverte --- */
-  .ac__ouvert {
-    position: absolute; left: clamp(18px, 2vw, 30px); right: clamp(18px, 2vw, 30px);
-    bottom: clamp(18px, 2vw, 28px);
-    display: grid; gap: 4px;
-    opacity: 0; transform: translateY(10px);
-    transition: opacity 0.4s var(--ease) 0.12s, transform 0.5s var(--ease) 0.12s;
-  }
-  .ac__band.is-open .ac__ouvert { opacity: 1; transform: none; }
-  .ac__titre {
-    font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-    font-size: clamp(1.1rem, 1.9vw, 1.8rem); line-height: 1.1; color: var(--text);
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .ac__meta {
+  .af__vigTag {
     font-family: var(--font-mono); text-transform: uppercase;
-    letter-spacing: 0.12em; font-size: 0.58rem; color: var(--text-muted);
+    letter-spacing: 0.12em; font-size: 0.52rem; color: var(--text-muted);
+    text-shadow: 0 1px 5px rgba(0,0,0,0.9);
   }
 
-  /* equerres de visee : seulement sur la bande ouverte */
-  .ac__band .mark { position: absolute; width: 13px; height: 13px; z-index: 3; }
-  .ac__band .mark.tl { top: 13px; left: 13px; }
-  .ac__band .mark.br { bottom: 13px; right: 13px; }
-  .ac__band .mark .arm-h { transform: scaleX(0); }
-  .ac__band .mark .arm-v { transform: scaleY(0); }
-  .ac__band.is-open .mark .arm-h { transform: scaleX(1); transition: transform var(--dur-sign) var(--ease) 0.15s; }
-  .ac__band.is-open .mark .arm-v { transform: scaleY(1); transition: transform var(--dur-sign) var(--ease) 0.15s; }
-
-  .ac__band.is-soon .ac__media :global(.coming-soon) { opacity: 0.9; }
-  /* hors categorie filtree : la bande se referme completement */
-  .ac__band.is-out { flex-grow: 0 !important; flex-basis: 0 !important; opacity: 0; pointer-events: none; }
+  /* vignette courante : liseré rose + filet en tête, c'est elle qui est au cadre */
+  .af__vig.is-on { box-shadow: inset 0 0 0 1.5px var(--accent); }
+  .af__vig.is-on::after {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--accent); z-index: 2;
+  }
+  .af__vig:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   @media (max-width: 900px) {
-    /* les bandes n'ont plus de sens : on empile, titres a l'horizontale */
-    .ac { flex-direction: column; height: auto; width: 100%; gap: 12px; }
-    .ac__band { flex: none !important; aspect-ratio: 16 / 9; }
-    .ac__band.is-out { display: none; }
-    .ac__vtitre { display: none; }
-    .ac__ouvert { opacity: 1 !important; transform: none !important; }
-    .ac__media :global(video) { filter: brightness(0.92); }
-    .ac__num { text-align: left; left: 16px; }
+    /* le cadre reprend un format d'image, la rangée devient une bande qui file */
+    .af { width: 100%; }
+    .af__scene { aspect-ratio: 16 / 9; max-height: none; border-radius: 0; }
+    .af__titre { font-size: clamp(1.6rem, 8vw, 2.6rem); max-width: none; }
+    .af__rang {
+      height: clamp(150px, 26vh, 210px);
+      overflow-x: auto; overflow-y: hidden;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      padding-inline: 12px;
+    }
+    .af__vig {
+      flex: 0 0 clamp(116px, 34vw, 168px);
+      /* accroche au bord gauche : « center » empeche la premiere et la
+         derniere vignette de se poser, le defilement bute aux extremites */
+      scroll-snap-align: start;
+    }
+    .af__vigMedia :global(video) { filter: brightness(0.62); }
   }
-
   /* ---------- En coulisses : mini galerie BTS ---------- */
   .bts {
     background:
@@ -345,15 +469,29 @@ const filters = baseFilters.map((f) => ({
 
 <script is:inline>
   (function () {
-    var ac = document.getElementById("ac");
-    if (!ac) return;
+    var af = document.getElementById("af");
+    if (!af) return;
 
     var cats = Array.prototype.slice.call(document.querySelectorAll(".cat"));
     var catsRow = document.querySelector(".cats__row");
     var sigframe = document.querySelector(".cats .sigframe");
-    var bands = Array.prototype.slice.call(ac.querySelectorAll(".ac__band"));
-    var selected = "all"; // categorie verrouillee (clic), persiste
-    var ouverte = 0;
+
+    var plans = Array.prototype.slice.call(af.querySelectorAll(".af__plan"));
+    var vigs = Array.prototype.slice.call(af.querySelectorAll(".af__vig"));
+    var info = af.querySelector(".af__info");
+    var elNum = document.getElementById("afNum");
+    var elTitre = document.getElementById("afTitre");
+    var elMeta = document.getElementById("afMeta");
+    var elLien = document.getElementById("afLien");
+
+    var courant = 0;
+    var selected = "all"; // categorie verrouillee au clic, persiste
+    var tempo = null;
+    var visible = true;
+    // au doigt il n'y a pas de survol : le premier appui sert a viser
+    var tactile = window.matchMedia("(hover: none)").matches;
+
+    function deuxChiffres(n) { return n < 10 ? "0" + n : String(n); }
 
     // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
     function moveIndicator(btn) {
@@ -368,66 +506,98 @@ const filters = baseFilters.map((f) => ({
       sigframe.classList.add("is-drawn");
     }
 
-    // Seule la bande ouverte joue : une video a la fois.
-    function ouvrir(i) {
-      if (i === ouverte || !bands[i] || bands[i].classList.contains("is-out")) return;
-      ouverte = i;
-      bands.forEach(function (b, k) {
-        var actif = k === i;
-        b.classList.toggle("is-open", actif);
-        if (actif) b.setAttribute("aria-current", "true");
-        else b.removeAttribute("aria-current");
-        var v = b.querySelector("video");
-        if (!v) return;
-        if (actif) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); }
-        else { try { v.pause(); } catch (e) {} }
-      });
-    }
-
-    function toutArreter() {
-      bands.forEach(function (b) {
-        var v = b.querySelector("video");
-        if (v) { try { v.pause(); } catch (e) {} }
-      });
-    }
-    function relancerOuverte() {
-      var v = bands[ouverte] && bands[ouverte].querySelector("video");
+    function jouer(v) {
       if (!v) return;
       var pr = v.play();
       if (pr && pr.catch) pr.catch(function () {});
     }
+    function stopper(v) { if (v) { try { v.pause(); } catch (e) {} } }
 
-    bands.forEach(function (b, i) {
-      b.addEventListener("mouseenter", function () { ouvrir(i); });
-      b.addEventListener("focus", function () { ouvrir(i); });
+    // Le grand cadre ne joue que le projet courant ; les vignettes visibles
+    // tournent en boucle, celles qui sont filtrees ou hors champ s'arretent.
+    function reglerLecture() {
+      plans.forEach(function (p, k) {
+        var v = p.querySelector("video");
+        if (visible && k === courant) jouer(v); else stopper(v);
+      });
+      vigs.forEach(function (x) {
+        var v = x.querySelector("video");
+        if (visible && !x.classList.contains("is-out")) jouer(v); else stopper(v);
+      });
+    }
+
+    function poser(i) {
+      if (i === courant || !vigs[i] || vigs[i].classList.contains("is-out")) return;
+      courant = i;
+
+      plans.forEach(function (p, k) {
+        var on = k === i;
+        p.classList.toggle("is-on", on);
+        if (on) p.removeAttribute("aria-hidden");
+        else p.setAttribute("aria-hidden", "true");
+      });
+      vigs.forEach(function (x, k) {
+        var on = k === i;
+        x.classList.toggle("is-on", on);
+        if (on) x.setAttribute("aria-current", "true");
+        else x.removeAttribute("aria-current");
+      });
+
+      // le texte sort, se met a jour hors champ, puis revient
+      var v = vigs[i];
+      info.classList.add("is-out");
+      clearTimeout(tempo);
+      tempo = setTimeout(function () {
+        elNum.textContent = deuxChiffres(i + 1);
+        elTitre.textContent = v.getAttribute("data-titre") || "";
+        elMeta.textContent = v.getAttribute("data-meta") || "";
+        var h = v.getAttribute("data-href");
+        if (h) { elLien.setAttribute("href", h); elLien.hidden = false; }
+        else { elLien.hidden = true; }
+        info.classList.remove("is-out");
+      }, 170);
+
+      reglerLecture();
+    }
+
+    vigs.forEach(function (v, i) {
+      v.addEventListener("mouseenter", function () { poser(i); });
+      v.addEventListener("focus", function () { poser(i); });
+      v.addEventListener("click", function (e) {
+        // au doigt : un appui vise, le suivant (ou le lien du cadre) entre
+        if (tactile && courant !== i) { e.preventDefault(); poser(i); }
+      });
     });
 
-    // Filtre : les bandes hors categorie se referment completement.
+    // Filtre : les vignettes hors categorie quittent la rangee.
     function applyFilter(cat) {
       var premiere = -1;
-      bands.forEach(function (b, i) {
-        var on = cat === "all" || b.getAttribute("data-category") === cat;
-        b.classList.toggle("is-out", !on);
+      vigs.forEach(function (v, i) {
+        var on = cat === "all" || v.getAttribute("data-category") === cat;
+        v.classList.toggle("is-out", !on);
         if (on) {
           if (premiere < 0) premiere = i;
-          b.removeAttribute("tabindex"); b.removeAttribute("aria-hidden");
+          v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
         } else {
-          b.setAttribute("tabindex", "-1"); b.setAttribute("aria-hidden", "true");
-          var v = b.querySelector("video"); if (v) v.pause();
+          v.setAttribute("tabindex", "-1"); v.setAttribute("aria-hidden", "true");
         }
       });
-      // categorie sans projet : on rouvre tout plutot qu'un ecran vide
+      // categorie sans projet : on remontre tout plutot qu'une rangee vide
       if (premiere < 0) {
-        bands.forEach(function (b) {
-          b.classList.remove("is-out");
-          b.removeAttribute("tabindex"); b.removeAttribute("aria-hidden");
+        vigs.forEach(function (v) {
+          v.classList.remove("is-out");
+          v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
         });
+        reglerLecture();
         return;
       }
-      // si la bande ouverte vient d'etre refermee, on en ouvre une visible
-      if (bands[ouverte].classList.contains("is-out")) {
-        ouverte = -1;
-        ouvrir(premiere);
+      // si la vignette au cadre vient d'etre filtree, on en pose une visible
+      if (vigs[courant].classList.contains("is-out")) {
+        var cible = premiere;
+        courant = -1;
+        poser(cible);
+      } else {
+        reglerLecture();
       }
     }
 
@@ -463,11 +633,12 @@ const filters = baseFilters.map((f) => ({
     // Rien ne tourne quand la section est hors champ.
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) {
-          if (e.isIntersecting) relancerOuverte();
-          else toutArreter();
-        });
-      }, { threshold: 0.1 }).observe(ac);
-    } else { relancerOuverte(); }
+        entries.forEach(function (e) { visible = e.isIntersecting; });
+        reglerLecture();
+      }, { threshold: 0.1 }).observe(af);
+    } else {
+      reglerLecture();
+    }
+    reglerLecture();
   })();
 </script>
