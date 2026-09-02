@@ -1,11 +1,10 @@
 ---
 /**
  * Projets : en-tête à fond vidéo, puis « l'affiche ».
- * Un grand cadre montre un seul projet à la fois (le programme) ; la rangée
- * de vignettes en dessous sert de sélection. Survol d'une vignette : le cadre
- * bascule en fondu et le bloc de texte se remet à jour. Clic : on entre dans
- * le projet. Les catégories au-dessus filtrent la rangée.
- * 6 projets, dont 3 « à venir » (placeholders, sans page détaillée).
+ * En tête, un grand cadre figé sur le dernier projet réalisé (champ `latest`
+ * des données), qui le dit et mène à sa fiche. Dessous, la rangée des autres
+ * projets, en accès direct. Pas de filtre : la sélection est trop courte pour
+ * qu'un tri serve à quelque chose.
  */
 import BaseLayout from "../layouts/BaseLayout.astro";
 import SouvenirsBoard from "../components/SouvenirsBoard.astro";
@@ -24,31 +23,6 @@ const coulissesLayout = [
   { t: "50%", l: "74%", w: "clamp(150px, 15vw, 220px)", r: "-1.5deg", cap: "Coulisses",       align: "right", p: -22 },
 ];
 
-const baseFilters = [
-  { label: "Tous", value: "all" },
-  { label: "Brand Film", value: "brand-film" },
-  { label: "Publicité", value: "publicite" },
-  { label: "Corporate", value: "corporate" },
-  { label: "Documentaire", value: "documentaire" },
-];
-// Disposition des clips sur la timeline de montage : t = piste (1 = V1, 2 = V2),
-// x = point d'entrée et w = durée, en % de la durée totale. Calibré pour un
-// étagement naturel (les clips d'une même piste ne se chevauchent jamais).
-const clips = [
-  { t: 1, x: 0,  w: 22 },
-  { t: 2, x: 16, w: 20 },
-  { t: 1, x: 26, w: 24 },
-  { t: 2, x: 42, w: 16 },
-  { t: 1, x: 54, w: 20 },
-  { t: 2, x: 64, w: 30 },
-];
-// Graduations de la règle (durée fictive du « montage » : 2 min).
-const ticks = Array.from({ length: 21 }, (_, k) => k * 5);
-const tcMarks = [
-  { x: 0, l: "00:00" }, { x: 25, l: "00:30" }, { x: 50, l: "01:00" },
-  { x: 75, l: "01:30" }, { x: 100, l: "02:00" },
-];
-
 // Le grand cadre est fige sur le dernier projet realise (champ `latest`).
 // Il ne redescend jamais dans la rangee : celle-ci ne montre que les autres.
 const dernier = projects.find((p) => p.latest) ?? projects.filter((p) => !p.placeholder)[0];
@@ -57,14 +31,6 @@ const autres = projects
   .map((p, i) => ({ p, num: String(i + 1).padStart(2, "0") }))
   .filter((x) => x.p !== dernier);
 
-// Les compteurs de categories decrivent la rangee, c'est elle que le filtre
-// manipule : le projet en tete n'est jamais filtre.
-const counts: Record<string, number> = { all: autres.length };
-for (const { p } of autres) counts[p.category] = (counts[p.category] || 0) + 1;
-const filters = baseFilters.map((f) => ({
-  ...f,
-  count: String(counts[f.value] || 0).padStart(2, "0"),
-}));
 ---
 
 <BaseLayout
@@ -84,26 +50,8 @@ const filters = baseFilters.map((f) => ({
     </div>
   </section>
 
-  <!-- ============ ROUE DE CARTES ============ -->
+  <!-- ============ PROJETS ============ -->
   <section class="projects">
-    <div class="container">
-      <!-- Catégories au-dessus (déclencheurs) -->
-      <div class="cats" role="group" aria-label="Catégories de projets" data-reveal>
-        <div class="cats__row">
-          {filters.map((f, i) => (
-            <button class="cat" type="button" data-filter={f.value} aria-pressed={i === 0 ? "true" : "false"}>
-              <span class="cat__label">{f.label}</span>
-              <span class="cat__count">{f.count}</span>
-            </button>
-          ))}
-          <span class="sigframe" aria-hidden="true">
-            <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-            <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
-          </span>
-        </div>
-      </div>
-
-    </div>
 
     <!-- L'AFFICHE : en tete le dernier projet realise, toujours le meme, puis
          la rangee des autres projets. Hors de .container pour la largeur. -->
@@ -164,14 +112,12 @@ const filters = baseFilters.map((f) => ({
             <button
               class="af__vig is-soon"
               type="button"
-              data-category={p.category}
               aria-label={`${p.title}, à venir`}
             >{dedans}</button>
           ) : (
             <a
               class="af__vig"
               href={`/projets/${p.slug}`}
-              data-category={p.category}
               aria-label={`${p.title}, ${p.cardType}`}
             >{dedans}</a>
           );
@@ -219,45 +165,6 @@ const filters = baseFilters.map((f) => ({
      Passées du gros display à du mono petit et espacé, dans le meme langage
      que les incrustations du mur. Séparées par de fins traits verticaux et
      posées sur une réglure, comme un bandeau de commande. */
-  .cats { padding-block: clamp(24px, 3.6vw, 44px); }
-  .cats__row {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 0; /* l'espacement vient du padding des items */
-    padding-bottom: 14px;
-  }
-  /* réglure fine sous la barre, arrêtée avant les bords */
-  .cats__row::after {
-    content: "";
-    position: absolute; left: 12%; right: 12%; bottom: 0; height: 1px;
-    background: linear-gradient(to right, rgba(255,255,255,0) 0%, var(--line) 18%, var(--line) 82%, rgba(255,255,255,0) 100%);
-  }
-  .cat {
-    position: relative;
-    display: inline-flex; align-items: baseline; gap: 0.55em;
-    padding: 0.4em clamp(13px, 1.9vw, 26px);
-    font-family: var(--font-mono); font-weight: 500;
-    text-transform: uppercase; letter-spacing: 0.16em;
-    font-size: 0.82rem; line-height: 1;
-    color: var(--text-faint);
-    transition: color var(--dur-sign) var(--ease);
-  }
-  /* trait vertical entre deux catégories */
-  .cat + .cat::before {
-    content: "";
-    position: absolute; left: 0; top: 50%; transform: translateY(-50%);
-    width: 1px; height: 10px; background: var(--line-strong);
-  }
-  .cat:hover, .cat[aria-pressed="true"] { color: var(--text); }
-  .cat__count {
-    font-family: var(--font-mono); font-weight: 500;
-    font-size: 0.62em; letter-spacing: 0.06em; color: var(--accent);
-    align-self: flex-start; margin-top: -0.1em;
-  }
-
   /* ---------- L'AFFICHE : grand cadre + rangée de vignettes ----------
      Un seul projet occupe le grand cadre, la rangée sert de sélection.
      L'échelle est dans l'image et dans le titre, pas dans les bordures. */
@@ -376,7 +283,6 @@ const filters = baseFilters.map((f) => ({
     font: inherit; color: inherit; cursor: pointer;
     transition: flex-grow 0.5s var(--ease);
   }
-  .af__vig.is-out { display: none; }
 
   .af__vigMedia { position: absolute; inset: 0; display: block; }
   .af__vigMedia :global(video),
@@ -471,27 +377,9 @@ const filters = baseFilters.map((f) => ({
     var af = document.getElementById("af");
     if (!af) return;
 
-    var cats = Array.prototype.slice.call(document.querySelectorAll(".cat"));
-    var catsRow = document.querySelector(".cats__row");
-    var sigframe = document.querySelector(".cats .sigframe");
-
     var scene = af.querySelector(".af__scene");
     var vigs = Array.prototype.slice.call(af.querySelectorAll(".af__vig"));
-    var selected = "all"; // categorie verrouillee au clic, persiste
     var visible = true;
-
-    // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
-    function moveIndicator(btn) {
-      if (!sigframe || !btn) return;
-      var PAD = 9;
-      sigframe.style.opacity = "1";
-      sigframe.style.transform = "translate(" + (btn.offsetLeft - PAD) + "px," + (btn.offsetTop - PAD) + "px)";
-      sigframe.style.width = btn.offsetWidth + PAD * 2 + "px";
-      sigframe.style.height = btn.offsetHeight + PAD * 2 + "px";
-      sigframe.classList.remove("is-drawn");
-      void sigframe.offsetWidth; // reflow, reinitialise le trace
-      sigframe.classList.add("is-drawn");
-    }
 
     function jouer(v) {
       if (!v) return;
@@ -500,71 +388,13 @@ const filters = baseFilters.map((f) => ({
     }
     function stopper(v) { if (v) { try { v.pause(); } catch (e) {} } }
 
-    // Tournent : le cadre en tete et les vignettes non filtrees, uniquement
-    // quand la section est a l'ecran.
+    // Le cadre en tete et les vignettes ne tournent que section a l'ecran.
     function reglerLecture() {
-      stopper(visible ? null : scene.querySelector("video"));
-      if (visible) jouer(scene.querySelector("video"));
-      vigs.forEach(function (x) {
-        var v = x.querySelector("video");
-        if (visible && !x.classList.contains("is-out")) jouer(v); else stopper(v);
-      });
+      var tout = [scene.querySelector("video")];
+      vigs.forEach(function (x) { tout.push(x.querySelector("video")); });
+      tout.forEach(function (v) { if (visible) jouer(v); else stopper(v); });
     }
 
-    // Filtre : les vignettes hors categorie quittent la rangee. Le projet en
-    // tete n'est jamais filtre, c'est le dernier realise.
-    function applyFilter(cat) {
-      var reste = 0;
-      vigs.forEach(function (v) {
-        var on = cat === "all" || v.getAttribute("data-category") === cat;
-        v.classList.toggle("is-out", !on);
-        if (on) {
-          reste++;
-          v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
-        } else {
-          v.setAttribute("tabindex", "-1"); v.setAttribute("aria-hidden", "true");
-        }
-      });
-      // categorie sans projet dans la rangee : on remontre tout plutot qu'un vide
-      if (reste === 0) {
-        vigs.forEach(function (v) {
-          v.classList.remove("is-out");
-          v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
-        });
-      }
-      reglerLecture();
-    }
-
-    function syncPressed() {
-      cats.forEach(function (b) {
-        b.setAttribute("aria-pressed", b.getAttribute("data-filter") === selected ? "true" : "false");
-      });
-    }
-
-    cats.forEach(function (btn) {
-      var f = function () { moveIndicator(btn); applyFilter(btn.getAttribute("data-filter")); };
-      btn.addEventListener("mouseenter", f);
-      btn.addEventListener("focus", f);
-      btn.addEventListener("click", function () {
-        selected = btn.getAttribute("data-filter");
-        syncPressed(); moveIndicator(btn); applyFilter(selected);
-      });
-    });
-    if (catsRow) catsRow.addEventListener("mouseleave", function () {
-      moveIndicator(document.querySelector('.cat[aria-pressed="true"]') || cats[0]);
-      applyFilter(selected);
-    });
-
-    var place = function () {
-      var a = document.querySelector('.cat[aria-pressed="true"]') || cats[0];
-      moveIndicator(a);
-    };
-    place(); setTimeout(place, 200);
-    window.addEventListener("load", place);
-    window.addEventListener("resize", place);
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(place);
-
-    // Rien ne tourne quand la section est hors champ.
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (e) { visible = e.isIntersecting; });
