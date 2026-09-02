@@ -61,7 +61,11 @@ const autres = projects
       >
         <span class="af__media">
           {dernier.cardVideo ? (
-            <video src={dernier.cardVideo} muted loop playsinline preload="metadata"></video>
+            <video
+              src={dernier.cardVideo}
+              poster={dernier.cardPoster}
+              muted loop playsinline preload="none"
+            ></video>
           ) : (
             <span class="coming-soon"><span class="coming-soon__grad"></span></span>
           )}
@@ -93,7 +97,11 @@ const autres = projects
             <>
               <span class="af__vigMedia">
                 {p.cardVideo ? (
-                  <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+                  <video
+                    src={p.cardVideo}
+                    poster={p.cardPoster}
+                    muted loop playsinline preload="none"
+                  ></video>
                 ) : (
                   <span class="coming-soon"><span class="coming-soon__grad"></span></span>
                 )}
@@ -107,11 +115,8 @@ const autres = projects
             </>
           );
           return p.placeholder ? (
-            <button
-              class="af__vig is-soon"
-              type="button"
-              aria-label={`${p.title}, à venir`}
-            >{dedans}</button>
+            /* rien a ouvrir : ni lien ni bouton, sinon on tabule dessus pour rien */
+            <div class="af__vig is-soon">{dedans}</div>
           ) : (
             <a
               class="af__vig"
@@ -300,7 +305,7 @@ const autres = projects
     transition: flex-grow 0.5s var(--ease);
   }
 
-  .af__vig.is-soon { flex: 0.7 1 0; }
+  .af__vig.is-soon { flex: 0.7 1 0; cursor: default; }
 
   .af__vigMedia { position: absolute; inset: 0; display: block; }
   .af__vigMedia :global(video),
@@ -401,12 +406,22 @@ const autres = projects
     var scene = af.querySelector(".af__scene");
     var vigs = Array.prototype.slice.call(af.querySelectorAll(".af__vig"));
 
+    // Animations reduites : on ne lance rien du tout, le poster tient lieu
+    // d'image. Le moteur du site gere deja ce cas, mais seulement pour les
+    // videos marquees data-autoplay, et les notres sont pilotees ici.
+    var reduire = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // Les gardes sur v.paused evitent d'appeler play() a chaque image de
+    // defilement sur une video qui tourne deja : une promesse allouee pour rien.
     function jouer(v) {
-      if (!v) return;
+      if (!v || !v.paused) return;
       var pr = v.play();
       if (pr && pr.catch) pr.catch(function () {});
     }
-    function stopper(v) { if (v) { try { v.pause(); } catch (e) {} } }
+    function stopper(v) {
+      if (!v || v.paused) return;
+      try { v.pause(); } catch (e) {}
+    }
 
     // On mesure au moment ou on en a besoin plutot que de retenir un etat :
     // l'observateur peut tres bien avoir rapporte « hors champ » a un instant
@@ -418,11 +433,13 @@ const autres = projects
 
     // Le cadre en tete et les vignettes ne tournent que section a l'ecran.
     function reglerLecture() {
-      var on = dansLaVue();
+      var on = !reduire && dansLaVue();
       var tout = [scene.querySelector("video")];
       vigs.forEach(function (x) { tout.push(x.querySelector("video")); });
       tout.forEach(function (v) { if (on) jouer(v); else stopper(v); });
     }
+
+    if (reduire) return; // rien a piloter : le poster reste affiche, point
 
     // A l'arrivee par transition, le gabarit met en pause tout ce qui demarre
     // tant que le panneau couvre l'ecran. Quand il se retire, on reapplique

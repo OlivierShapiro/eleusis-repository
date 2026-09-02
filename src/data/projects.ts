@@ -11,6 +11,9 @@ export interface Project {
   embed?: { provider: "youtube" | "vimeo"; id: string };
   video?: string;       // fallback (placeholders)
   cardVideo?: string;   // vidéo de couverture de la carte (lecture auto, boucle)
+  cardPoster?: string;  // 1re image de cardVideo : affichée avant que la vidéo
+                        // n'arrive, et à la place de la vidéo si le visiteur a
+                        // demandé des animations réduites
   client?: string;
   year?: string;
   role?: string;
@@ -29,6 +32,7 @@ export const projects: Project[] = [
     category: "brand-film",
     embed: { provider: "youtube", id: "OF1te3PmTEY" },
     cardVideo: "/videos/cartes/mpfootperf.mp4",
+    cardPoster: "/images/cartes/mpfootperf.webp",
     client: "MPfootperf.",
     year: "2025",
     role: "Réalisation, color grading, montage",
@@ -50,6 +54,7 @@ export const projects: Project[] = [
     category: "brand-film",
     embed: { provider: "vimeo", id: "1159587581" },
     cardVideo: "/videos/cartes/the-dancer.mp4",
+    cardPoster: "/images/cartes/the-dancer.webp",
     year: "2025",
     role: "Réalisation, montage, color grading",
     description:
@@ -70,6 +75,7 @@ export const projects: Project[] = [
     category: "corporate",
     embed: { provider: "youtube", id: "Dr0IawbuiX8" },
     cardVideo: "/videos/cartes/webacces.mp4",
+    cardPoster: "/images/cartes/webacces.webp",
     client: "WebAcces",
     year: "2026",
     role: "Réalisation, tournage, montage",
