@@ -379,7 +379,6 @@ const autres = projects
 
     var scene = af.querySelector(".af__scene");
     var vigs = Array.prototype.slice.call(af.querySelectorAll(".af__vig"));
-    var visible = true;
 
     function jouer(v) {
       if (!v) return;
@@ -388,23 +387,42 @@ const autres = projects
     }
     function stopper(v) { if (v) { try { v.pause(); } catch (e) {} } }
 
+    // On mesure au moment ou on en a besoin plutot que de retenir un etat :
+    // l'observateur peut tres bien avoir rapporte « hors champ » a un instant
+    // ou la mise en page n'etait pas finie, et ne jamais se corriger ensuite.
+    function dansLaVue() {
+      var r = af.getBoundingClientRect();
+      return r.width > 0 && r.bottom > 0 && r.top < (window.innerHeight || 0);
+    }
+
     // Le cadre en tete et les vignettes ne tournent que section a l'ecran.
     function reglerLecture() {
+      var on = dansLaVue();
       var tout = [scene.querySelector("video")];
       vigs.forEach(function (x) { tout.push(x.querySelector("video")); });
-      tout.forEach(function (v) { if (visible) jouer(v); else stopper(v); });
+      tout.forEach(function (v) { if (on) jouer(v); else stopper(v); });
     }
 
     // A l'arrivee par transition, le gabarit met en pause tout ce qui demarre
     // tant que le panneau couvre l'ecran. Quand il se retire, on reapplique
     // notre regle : sinon les vignettes restent figees jusqu'au rafraichissement.
     document.addEventListener("pgt:fin", reglerLecture);
+    // Retour par l'historique : la page ressort du cache telle qu'elle etait.
+    window.addEventListener("pageshow", reglerLecture);
 
+    // L'observateur ne suffit pas : il ne delivre pas toujours, et une seule
+    // notification manquee laisse les vignettes figees pour de bon. On ecoute
+    // donc aussi le defilement, limite a une mesure par image.
+    var enAttente = false;
+    function auDefilement() {
+      if (enAttente) return;
+      enAttente = true;
+      requestAnimationFrame(function () { enAttente = false; reglerLecture(); });
+    }
+    window.addEventListener("scroll", auDefilement, { passive: true });
+    window.addEventListener("resize", auDefilement, { passive: true });
     if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (entries) {
-        entries.forEach(function (e) { visible = e.isIntersecting; });
-        reglerLecture();
-      }, { threshold: 0.1 }).observe(af);
+      new IntersectionObserver(reglerLecture, { threshold: 0 }).observe(af);
     }
     reglerLecture();
   })();
