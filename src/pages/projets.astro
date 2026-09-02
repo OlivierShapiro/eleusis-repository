@@ -395,6 +395,11 @@ const autres = projects
       tout.forEach(function (v) { if (visible) jouer(v); else stopper(v); });
     }
 
+    // A l'arrivee par transition, le gabarit met en pause tout ce qui demarre
+    // tant que le panneau couvre l'ecran. Quand il se retire, on reapplique
+    // notre regle : sinon les vignettes restent figees jusqu'au rafraichissement.
+    document.addEventListener("pgt:fin", reglerLecture);
+
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(function (entries) {
         entries.forEach(function (e) { visible = e.isIntersecting; });

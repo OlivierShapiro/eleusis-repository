@@ -167,6 +167,13 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
             html.classList.remove("pgt-enter", "pgt-go");
             document.removeEventListener("play", bloquerLecture, true);
             relancerVideos();
+            // relancerVideos() ne connait que les fonds et le mur. Les pages
+            // qui pilotent elles-memes leurs videos (l'affiche de /projets)
+            // n'ont aucun moyen de savoir que le blocage vient de sauter :
+            // sans ce signal, leurs videos restent en pause jusqu'au prochain
+            // changement de visibilite, qui n'arrive jamais si la section est
+            // deja a l'ecran. On previent, a chacun de reappliquer sa regle.
+            document.dispatchEvent(new CustomEvent("pgt:fin"));
           };
 
           // On ne revele qu'une fois le gros du chargement passe : les polices
