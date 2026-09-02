@@ -49,8 +49,18 @@ const tcMarks = [
   { x: 75, l: "01:30" }, { x: 100, l: "02:00" },
 ];
 
-const counts: Record<string, number> = { all: projects.length };
-for (const p of projects) counts[p.category] = (counts[p.category] || 0) + 1;
+// Le grand cadre est fige sur le dernier projet realise (champ `latest`).
+// Il ne redescend jamais dans la rangee : celle-ci ne montre que les autres.
+const dernier = projects.find((p) => p.latest) ?? projects.filter((p) => !p.placeholder)[0];
+const numDernier = String(projects.indexOf(dernier) + 1).padStart(2, "0");
+const autres = projects
+  .map((p, i) => ({ p, num: String(i + 1).padStart(2, "0") }))
+  .filter((x) => x.p !== dernier);
+
+// Les compteurs de categories decrivent la rangee, c'est elle que le filtre
+// manipule : le projet en tete n'est jamais filtre.
+const counts: Record<string, number> = { all: autres.length };
+for (const { p } of autres) counts[p.category] = (counts[p.category] || 0) + 1;
 const filters = baseFilters.map((f) => ({
   ...f,
   count: String(counts[f.value] || 0).padStart(2, "0"),
@@ -95,58 +105,51 @@ const filters = baseFilters.map((f) => ({
 
     </div>
 
-    <!-- L'AFFICHE : un grand cadre (le programme) piloté par la rangée de
-         vignettes. Survol d'une vignette = le cadre bascule, clic = on entre.
-         Hors de .container pour occuper toute la largeur utile. -->
+    <!-- L'AFFICHE : en tete le dernier projet realise, toujours le meme, puis
+         la rangee des autres projets. Hors de .container pour la largeur. -->
     <div class="af" id="af" data-reveal>
 
-      <div class="af__scene">
-        {projects.map((p, i) => (
-          <div
-            class:list={["af__plan", { "is-on": i === 0 }]}
-            aria-hidden={i === 0 ? undefined : "true"}
-          >
-            {p.placeholder ? (
-              <span class="coming-soon">
-                <span class="coming-soon__grad"></span>
-                <span class="coming-soon__label">Prochainement</span>
-              </span>
-            ) : (
-              <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
-            )}
-          </div>
-        ))}
+      <a
+        class="af__scene"
+        href={dernier.placeholder ? "/projets" : `/projets/${dernier.slug}`}
+        aria-label={`${dernier.title}, notre dernier projet réalisé`}
+      >
+        <span class="af__media">
+          {dernier.cardVideo ? (
+            <video src={dernier.cardVideo} muted loop playsinline preload="metadata"></video>
+          ) : (
+            <span class="coming-soon"><span class="coming-soon__grad"></span></span>
+          )}
+        </span>
 
         <span class="af__voile" aria-hidden="true"></span>
         <span class="mark tl" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
         <span class="mark br" aria-hidden="true"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
 
-        <div class="af__info">
-          <p class="af__compte" aria-hidden="true"><span id="afNum">01</span> / {total}</p>
-          <h2 class="af__titre" id="afTitre">{projects[0].title}</h2>
-          <p class="af__meta" id="afMeta">
-            {projects[0].cardType}{projects[0].year ? " · " + projects[0].year : ""}
-          </p>
-          <a class="af__lien" id="afLien" href={`/projets/${projects[0].slug}`}>
+        <span class="af__tag">// Notre dernier projet réalisé</span>
+
+        <span class="af__info">
+          <span class="af__compte" aria-hidden="true"><span>{numDernier}</span> / {total}</span>
+          <h2 class="af__titre">{dernier.title}</h2>
+          <span class="af__meta">
+            {dernier.cardType}{dernier.year ? " · " + dernier.year : ""}
+          </span>
+          <span class="af__lien">
             <span>Voir le projet</span>
             <i class="af__fleche" aria-hidden="true"></i>
-          </a>
-        </div>
-      </div>
+          </span>
+        </span>
+      </a>
 
       <div class="af__rang">
-        {projects.map((p, i) => {
-          const meta = p.placeholder
-            ? "À venir"
-            : p.cardType + (p.year ? " · " + p.year : "");
-          const num = String(i + 1).padStart(2, "0");
+        {autres.map(({ p, num }) => {
           const dedans = (
             <>
               <span class="af__vigMedia">
-                {p.placeholder ? (
-                  <span class="coming-soon"><span class="coming-soon__grad"></span></span>
-                ) : (
+                {p.cardVideo ? (
                   <video src={p.cardVideo} muted loop playsinline preload="metadata"></video>
+                ) : (
+                  <span class="coming-soon"><span class="coming-soon__grad"></span></span>
                 )}
               </span>
               <span class="af__vigVoile" aria-hidden="true"></span>
@@ -159,25 +162,17 @@ const filters = baseFilters.map((f) => ({
           );
           return p.placeholder ? (
             <button
-              class:list={["af__vig", "is-soon", { "is-on": i === 0 }]}
+              class="af__vig is-soon"
               type="button"
               data-category={p.category}
-              data-titre={p.title}
-              data-meta={meta}
-              data-href=""
               aria-label={`${p.title}, à venir`}
-              aria-current={i === 0 ? "true" : undefined}
             >{dedans}</button>
           ) : (
             <a
-              class:list={["af__vig", { "is-on": i === 0 }]}
+              class="af__vig"
               href={`/projets/${p.slug}`}
               data-category={p.category}
-              data-titre={p.title}
-              data-meta={meta}
-              data-href={`/projets/${p.slug}`}
               aria-label={`${p.title}, ${p.cardType}`}
-              aria-current={i === 0 ? "true" : undefined}
             >{dedans}</a>
           );
         })}
@@ -273,7 +268,7 @@ const filters = baseFilters.map((f) => ({
 
   /* --- le grand cadre (le « programme ») --- */
   .af__scene {
-    position: relative;
+    display: block; position: relative;
     width: 100%;
     aspect-ratio: 12 / 5;
     max-height: 46vh;
@@ -281,18 +276,18 @@ const filters = baseFilters.map((f) => ({
     border-radius: 2px;
     background: var(--bg-deep);
   }
-  /* un calque par projet, empilés : seul le courant est visible */
-  .af__plan {
-    position: absolute; inset: 0;
-    opacity: 0; scale: 1.045;
-    transition: opacity 0.5s var(--ease), scale 0.9s var(--ease);
-  }
-  .af__plan.is-on { opacity: 1; scale: 1; }
-  .af__plan :global(video),
-  .af__plan :global(.coming-soon) {
+  .af__scene:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  .af__media { position: absolute; inset: 0; display: block; }
+  .af__media :global(video),
+  .af__media :global(.coming-soon) {
     position: absolute; inset: 0; width: 100%; height: 100%;
   }
-  .af__plan :global(video) { object-fit: cover; display: block; }
+  .af__media :global(video) {
+    object-fit: cover; display: block;
+    scale: 1; transition: scale 1.1s var(--ease);
+  }
+  .af__scene:hover .af__media :global(video) { scale: 1.025; }
 
   /* voile : lisibilité du texte, plus dense en bas à gauche */
   .af__voile {
@@ -303,8 +298,17 @@ const filters = baseFilters.map((f) => ({
   }
 
   .af__scene .mark { position: absolute; width: 16px; height: 16px; z-index: 3; }
-  .af__scene .mark.tl { top: 16px; left: 16px; }
-  .af__scene .mark.br { bottom: 16px; right: 16px; }
+  .af__scene .mark.tl { top: 15px; left: 15px; }
+  .af__scene .mark.br { bottom: 15px; right: 15px; }
+
+  /* mention en tete : l'equerre puis le libelle, sur la meme ligne */
+  .af__tag {
+    position: absolute; z-index: 4; top: 13px; left: 41px;
+    font-family: var(--font-mono); font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    font-size: 0.6rem; color: var(--accent);
+    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  }
 
   /* --- le bloc de texte, en bas à gauche du cadre --- */
   .af__info {
@@ -313,12 +317,6 @@ const filters = baseFilters.map((f) => ({
     right: clamp(18px, 2.6vw, 44px);
     bottom: clamp(16px, 2.2vw, 36px);
     display: grid; gap: 6px; justify-items: start;
-    transition: opacity 0.38s var(--ease), transform 0.38s var(--ease);
-  }
-  /* pendant la bascule : le texte sort, se met à jour, revient */
-  .af__info.is-out {
-    opacity: 0; transform: translateY(10px);
-    transition-duration: 0.17s;
   }
   .af__compte {
     font-family: var(--font-mono); font-weight: 500;
@@ -340,14 +338,14 @@ const filters = baseFilters.map((f) => ({
   }
   .af__lien {
     display: inline-flex; align-items: center; gap: 0.7em;
+    /* le lien, c'est tout le cadre : ceci n'est que la marque visuelle */
     margin-top: clamp(6px, 0.9vw, 14px);
     font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text);
     padding-bottom: 4px; border-bottom: 1px solid var(--line-strong);
     transition: color var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease);
   }
-  .af__lien[hidden] { display: none; }
-  .af__lien:hover { color: var(--accent); border-color: var(--accent); }
+  .af__scene:hover .af__lien { color: var(--accent); border-color: var(--accent); }
   .af__fleche {
     width: 16px; height: 1.5px; background: currentColor; position: relative;
     transition: transform var(--dur-sign) var(--ease);
@@ -357,7 +355,7 @@ const filters = baseFilters.map((f) => ({
     width: 7px; height: 1.5px; background: currentColor;
     transform: rotate(42deg); transform-origin: right center;
   }
-  .af__lien:hover .af__fleche { transform: translateX(5px); }
+  .af__scene:hover .af__fleche { transform: translateX(5px); }
 
   /* --- la rangée de vignettes (la sélection) --- */
   .af__rang {
@@ -392,8 +390,7 @@ const filters = baseFilters.map((f) => ({
     scale: 1;
     transition: filter 0.5s var(--ease), scale 0.9s var(--ease);
   }
-  .af__vig:hover .af__vigMedia :global(video) { filter: brightness(0.78); scale: 1.04; }
-  .af__vig.is-on .af__vigMedia :global(video) { filter: brightness(1); scale: 1; }
+  .af__vig:hover .af__vigMedia :global(video) { filter: brightness(1); scale: 1.05; }
 
   .af__vigVoile {
     position: absolute; inset: 0; pointer-events: none;
@@ -406,7 +403,7 @@ const filters = baseFilters.map((f) => ({
     text-shadow: 0 1px 5px rgba(0,0,0,0.9);
     transition: color var(--dur-sign) var(--ease);
   }
-  .af__vig.is-on .af__vigNum { color: var(--accent); }
+  .af__vig:hover .af__vigNum { color: var(--accent); }
 
   .af__vigBas {
     position: absolute; left: 12px; right: 12px; bottom: 12px;
@@ -424,12 +421,14 @@ const filters = baseFilters.map((f) => ({
     text-shadow: 0 1px 5px rgba(0,0,0,0.9);
   }
 
-  /* vignette courante : liseré rose + filet en tête, c'est elle qui est au cadre */
-  .af__vig.is-on { box-shadow: inset 0 0 0 1.5px var(--accent); }
-  .af__vig.is-on::after {
+  /* filet rose en tete au survol : la vignette visee se detache de la rangee */
+  .af__vig::after {
     content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
     background: var(--accent); z-index: 2;
+    transform: scaleX(0); transform-origin: left;
+    transition: transform var(--dur-sign) var(--ease);
   }
+  .af__vig:hover::after, .af__vig:focus-visible::after { transform: scaleX(1); }
   .af__vig:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
   @media (max-width: 900px) {
@@ -476,22 +475,10 @@ const filters = baseFilters.map((f) => ({
     var catsRow = document.querySelector(".cats__row");
     var sigframe = document.querySelector(".cats .sigframe");
 
-    var plans = Array.prototype.slice.call(af.querySelectorAll(".af__plan"));
+    var scene = af.querySelector(".af__scene");
     var vigs = Array.prototype.slice.call(af.querySelectorAll(".af__vig"));
-    var info = af.querySelector(".af__info");
-    var elNum = document.getElementById("afNum");
-    var elTitre = document.getElementById("afTitre");
-    var elMeta = document.getElementById("afMeta");
-    var elLien = document.getElementById("afLien");
-
-    var courant = 0;
     var selected = "all"; // categorie verrouillee au clic, persiste
-    var tempo = null;
     var visible = true;
-    // au doigt il n'y a pas de survol : le premier appui sert a viser
-    var tactile = window.matchMedia("(hover: none)").matches;
-
-    function deuxChiffres(n) { return n < 10 ? "0" + n : String(n); }
 
     // Indicateur signature : le cadre 2 coins enveloppe la categorie active.
     function moveIndicator(btn) {
@@ -513,92 +500,39 @@ const filters = baseFilters.map((f) => ({
     }
     function stopper(v) { if (v) { try { v.pause(); } catch (e) {} } }
 
-    // Le grand cadre ne joue que le projet courant ; les vignettes visibles
-    // tournent en boucle, celles qui sont filtrees ou hors champ s'arretent.
+    // Tournent : le cadre en tete et les vignettes non filtrees, uniquement
+    // quand la section est a l'ecran.
     function reglerLecture() {
-      plans.forEach(function (p, k) {
-        var v = p.querySelector("video");
-        if (visible && k === courant) jouer(v); else stopper(v);
-      });
+      stopper(visible ? null : scene.querySelector("video"));
+      if (visible) jouer(scene.querySelector("video"));
       vigs.forEach(function (x) {
         var v = x.querySelector("video");
         if (visible && !x.classList.contains("is-out")) jouer(v); else stopper(v);
       });
     }
 
-    function poser(i) {
-      if (i === courant || !vigs[i] || vigs[i].classList.contains("is-out")) return;
-      courant = i;
-
-      plans.forEach(function (p, k) {
-        var on = k === i;
-        p.classList.toggle("is-on", on);
-        if (on) p.removeAttribute("aria-hidden");
-        else p.setAttribute("aria-hidden", "true");
-      });
-      vigs.forEach(function (x, k) {
-        var on = k === i;
-        x.classList.toggle("is-on", on);
-        if (on) x.setAttribute("aria-current", "true");
-        else x.removeAttribute("aria-current");
-      });
-
-      // le texte sort, se met a jour hors champ, puis revient
-      var v = vigs[i];
-      info.classList.add("is-out");
-      clearTimeout(tempo);
-      tempo = setTimeout(function () {
-        elNum.textContent = deuxChiffres(i + 1);
-        elTitre.textContent = v.getAttribute("data-titre") || "";
-        elMeta.textContent = v.getAttribute("data-meta") || "";
-        var h = v.getAttribute("data-href");
-        if (h) { elLien.setAttribute("href", h); elLien.hidden = false; }
-        else { elLien.hidden = true; }
-        info.classList.remove("is-out");
-      }, 170);
-
-      reglerLecture();
-    }
-
-    vigs.forEach(function (v, i) {
-      v.addEventListener("mouseenter", function () { poser(i); });
-      v.addEventListener("focus", function () { poser(i); });
-      v.addEventListener("click", function (e) {
-        // au doigt : un appui vise, le suivant (ou le lien du cadre) entre
-        if (tactile && courant !== i) { e.preventDefault(); poser(i); }
-      });
-    });
-
-    // Filtre : les vignettes hors categorie quittent la rangee.
+    // Filtre : les vignettes hors categorie quittent la rangee. Le projet en
+    // tete n'est jamais filtre, c'est le dernier realise.
     function applyFilter(cat) {
-      var premiere = -1;
-      vigs.forEach(function (v, i) {
+      var reste = 0;
+      vigs.forEach(function (v) {
         var on = cat === "all" || v.getAttribute("data-category") === cat;
         v.classList.toggle("is-out", !on);
         if (on) {
-          if (premiere < 0) premiere = i;
+          reste++;
           v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
         } else {
           v.setAttribute("tabindex", "-1"); v.setAttribute("aria-hidden", "true");
         }
       });
-      // categorie sans projet : on remontre tout plutot qu'une rangee vide
-      if (premiere < 0) {
+      // categorie sans projet dans la rangee : on remontre tout plutot qu'un vide
+      if (reste === 0) {
         vigs.forEach(function (v) {
           v.classList.remove("is-out");
           v.removeAttribute("tabindex"); v.removeAttribute("aria-hidden");
         });
-        reglerLecture();
-        return;
       }
-      // si la vignette au cadre vient d'etre filtree, on en pose une visible
-      if (vigs[courant].classList.contains("is-out")) {
-        var cible = premiere;
-        courant = -1;
-        poser(cible);
-      } else {
-        reglerLecture();
-      }
+      reglerLecture();
     }
 
     function syncPressed() {
@@ -636,8 +570,6 @@ const filters = baseFilters.map((f) => ({
         entries.forEach(function (e) { visible = e.isIntersecting; });
         reglerLecture();
       }, { threshold: 0.1 }).observe(af);
-    } else {
-      reglerLecture();
     }
     reglerLecture();
   })();

@@ -18,6 +18,7 @@ export interface Project {
   credits?: [string, string][];
   stills?: number;      // nb de stills dispo (public/images/projets/<slug>/still-0X.webp)
   placeholder?: boolean;
+  latest?: boolean;     // dernier projet réalisé : mis en avant sur /projets
 }
 
 export const projects: Project[] = [
@@ -83,9 +84,18 @@ export const projects: Project[] = [
     ],
     stills: 6,
   },
+  // Dernier projet réalisé : c'est lui qui occupe le grand cadre en haut de
+  // /projets. Fiche créée à l'avance, il manque encore la vidéo de couverture,
+  // le film, l'année, les crédits et les stills.
+  {
+    slug: "95-pilates",
+    title: "95 Pilates",
+    cardType: "Pilates",
+    category: "brand-film",
+    latest: true,
+  },
   // ── Placeholders « à venir » : affichent un visuel « Prochainement »
   //    (dégradé animé) tant qu'aucun vrai projet n'est fourni. ──────────
-  { slug: "projet-04", title: "Projet 04", cardType: "Publicité", category: "publicite", placeholder: true },
-  { slug: "projet-05", title: "Projet 05", cardType: "Documentaire", category: "documentaire", placeholder: true },
-  { slug: "projet-06", title: "Projet 06", cardType: "Corporate", category: "corporate", placeholder: true },
+  { slug: "projet-05", title: "Projet 05", cardType: "Publicité", category: "publicite", placeholder: true },
+  { slug: "projet-06", title: "Projet 06", cardType: "Documentaire", category: "documentaire", placeholder: true },
 ];
