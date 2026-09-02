@@ -10,8 +10,6 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import SouvenirsBoard from "../components/SouvenirsBoard.astro";
 import { projects } from "../data/projects";
 
-const total = String(projects.length).padStart(2, "0");
-
 // Disposition « En coulisses » (page Projets) : même contenu que la page
 // À propos (src/data/souvenirs.ts) mais éparpillé AUTREMENT (plus colonné).
 const coulissesLayout = [
@@ -26,7 +24,6 @@ const coulissesLayout = [
 // Le grand cadre est fige sur le dernier projet realise (champ `latest`).
 // Il ne redescend jamais dans la rangee : celle-ci ne montre que les autres.
 const dernier = projects.find((p) => p.latest) ?? projects.filter((p) => !p.placeholder)[0];
-const numDernier = String(projects.indexOf(dernier) + 1).padStart(2, "0");
 const autres = projects
   .map((p, i) => ({ p, num: String(i + 1).padStart(2, "0") }))
   .filter((x) => x.p !== dernier);
@@ -77,14 +74,15 @@ const autres = projects
         <span class="af__tag">// Notre dernier projet réalisé</span>
 
         <span class="af__info">
-          <span class="af__compte" aria-hidden="true"><span>{numDernier}</span> / {total}</span>
           <h2 class="af__titre">{dernier.title}</h2>
-          <span class="af__meta">
-            {dernier.cardType}{dernier.year ? " · " + dernier.year : ""}
-          </span>
-          <span class="af__lien">
-            <span>Voir le projet</span>
-            <i class="af__fleche" aria-hidden="true"></i>
+          <span class="af__coteD">
+            <span class="af__meta">
+              {dernier.cardType}{dernier.year ? " · " + dernier.year : ""}
+            </span>
+            <span class="af__lien">
+              <span>Voir le projet</span>
+              <i class="af__fleche" aria-hidden="true"></i>
+            </span>
           </span>
         </span>
       </a>
@@ -204,9 +202,25 @@ const autres = projects
       linear-gradient(to right, rgba(8,8,11,0.62) 0%, rgba(8,8,11,0) 46%);
   }
 
-  .af__scene .mark { position: absolute; width: 16px; height: 16px; z-index: 3; }
+  /* Equerres de visee : le global les laisse a scale(0) et ne les trace que
+     via .is-drawn. Ici on les pose nous-memes, courtes au repos, et elles
+     s'allongent au survol : c'est le geste signature du site, pas un ajout. */
+  .af__scene .mark { position: absolute; width: 22px; height: 22px; z-index: 3; }
   .af__scene .mark.tl { top: 15px; left: 15px; }
   .af__scene .mark.br { bottom: 15px; right: 15px; }
+  .af__scene .mark .arm-h { width: 22px; }
+  .af__scene .mark .arm-v { height: 22px; }
+  .af__scene .mark .arm-h,
+  .af__scene .mark .arm-v {
+    opacity: 0.62;
+    transition: transform 0.5s var(--ease), opacity 0.5s var(--ease);
+  }
+  .af__scene .mark .arm-h { transform: scaleX(0.5); }
+  .af__scene .mark .arm-v { transform: scaleY(0.5); }
+  .af__scene:hover .mark .arm-h,
+  .af__scene:focus-visible .mark .arm-h { transform: scaleX(1); opacity: 1; }
+  .af__scene:hover .mark .arm-v,
+  .af__scene:focus-visible .mark .arm-v { transform: scaleY(1); opacity: 1; }
 
   /* mention en tete : l'equerre puis le libelle, sur la meme ligne */
   .af__tag {
@@ -223,20 +237,21 @@ const autres = projects
     left: clamp(18px, 2.6vw, 44px);
     right: clamp(18px, 2.6vw, 44px);
     bottom: clamp(16px, 2.2vw, 36px);
-    display: grid; gap: 6px; justify-items: start;
+    /* titre a gauche, type et lien a droite, cales sur la meme ligne de base :
+       la composition occupe la largeur du cadre au lieu de se tasser dans un coin */
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: clamp(20px, 3vw, 56px);
   }
-  .af__compte {
-    font-family: var(--font-mono); font-weight: 500;
-    font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-muted);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+  .af__coteD {
+    display: grid; gap: 8px; justify-items: end; text-align: right;
+    flex: 0 0 auto; padding-bottom: 4px;
   }
-  .af__compte :global(span) { color: var(--accent); }
   .af__titre {
     font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
     font-size: clamp(1.9rem, 5.4vw, 5rem); line-height: 1;
     letter-spacing: -0.01em; color: var(--text);
     text-shadow: 0 2px 26px rgba(0,0,0,0.62);
-    max-width: 15ch;
+    min-width: 0; max-width: 15ch;
   }
   .af__meta {
     font-family: var(--font-mono); text-transform: uppercase;
@@ -246,7 +261,6 @@ const autres = projects
   .af__lien {
     display: inline-flex; align-items: center; gap: 0.7em;
     /* le lien, c'est tout le cadre : ceci n'est que la marque visuelle */
-    margin-top: clamp(6px, 0.9vw, 14px);
     font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.16em; font-size: 0.66rem; color: var(--text);
     padding-bottom: 4px; border-bottom: 1px solid var(--line-strong);
@@ -272,7 +286,9 @@ const autres = projects
   }
   .af__vig {
     position: relative;
-    flex: 1 1 0; min-width: 0; height: 100%;
+    /* les projets tournes sont larges, ceux a venir restent etroits : la
+       rangee prend un rythme et le poids va sur ce qui existe vraiment */
+    flex: 1.3 1 0; min-width: 0; height: 100%;
     overflow: hidden; border-radius: 2px;
     background: var(--bg-deep);
     text-align: left;
@@ -283,6 +299,8 @@ const autres = projects
     font: inherit; color: inherit; cursor: pointer;
     transition: flex-grow 0.5s var(--ease);
   }
+
+  .af__vig.is-soon { flex: 0.7 1 0; }
 
   .af__vigMedia { position: absolute; inset: 0; display: block; }
   .af__vigMedia :global(video),
@@ -303,8 +321,8 @@ const autres = projects
     background: linear-gradient(to top, rgba(8,8,11,0.88) 0%, rgba(8,8,11,0.18) 42%, rgba(8,8,11,0) 68%);
   }
   .af__vigNum {
-    position: absolute; top: 12px; left: 12px;
-    font-family: var(--font-mono); font-weight: 500; font-size: 0.56rem;
+    position: absolute; top: 14px; left: 14px;
+    font-family: var(--font-mono); font-weight: 500; font-size: 0.6rem;
     letter-spacing: 0.16em; color: var(--text-muted);
     text-shadow: 0 1px 5px rgba(0,0,0,0.9);
     transition: color var(--dur-sign) var(--ease);
@@ -312,18 +330,18 @@ const autres = projects
   .af__vig:hover .af__vigNum { color: var(--accent); }
 
   .af__vigBas {
-    position: absolute; left: 12px; right: 12px; bottom: 12px;
-    display: grid; gap: 3px;
+    position: absolute; left: 14px; right: 14px; bottom: 14px;
+    display: grid; gap: 4px;
   }
   .af__vigTitre {
     font-family: var(--font-display); font-weight: 800; text-transform: uppercase;
-    font-size: clamp(0.66rem, 0.86vw, 0.84rem); line-height: 1.15;
+    font-size: clamp(0.82rem, 1.12vw, 1.05rem); line-height: 1.12;
     color: var(--text); text-shadow: 0 1px 6px rgba(0,0,0,0.9);
     overflow: hidden;
   }
   .af__vigTag {
     font-family: var(--font-mono); text-transform: uppercase;
-    letter-spacing: 0.12em; font-size: 0.52rem; color: var(--text-muted);
+    letter-spacing: 0.12em; font-size: 0.58rem; color: var(--text-muted);
     text-shadow: 0 1px 5px rgba(0,0,0,0.9);
   }
 
@@ -349,12 +367,15 @@ const autres = projects
       -webkit-overflow-scrolling: touch;
       padding-inline: 12px;
     }
+    .af__info { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .af__coteD { justify-items: start; text-align: left; padding-bottom: 0; }
     .af__vig {
       flex: 0 0 clamp(116px, 34vw, 168px);
       /* accroche au bord gauche : « center » empeche la premiere et la
          derniere vignette de se poser, le defilement bute aux extremites */
       scroll-snap-align: start;
     }
+    .af__vig.is-soon { flex: 0 0 clamp(84px, 24vw, 118px); }
     .af__vigMedia :global(video) { filter: brightness(0.62); }
   }
   /* ---------- En coulisses : mini galerie BTS ---------- */
