@@ -83,13 +83,16 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
 
-    <!-- Polices : Encode Sans Expanded (titres) + IBM Plex Mono (corps) -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Encode+Sans+Expanded:wght@500;800&family=IBM+Plex+Mono:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Polices : Encode Sans Expanded (titres) + IBM Plex Mono (corps).
+         Servies depuis le domaine du site (public/fonts), declarees en
+         @font-face dans global.css. On precharge les deux graisses qui
+         portent l'essentiel du texte : elles arrivent avec la page, donc
+         aucune substitution ne vient recalculer la mise en page pendant la
+         transition. -->
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="/fonts/encode-sans-expanded-800.woff2" />
+    <link rel="preload" as="font" type="font/woff2" crossorigin
+      href="/fonts/ibm-plex-mono-400.woff2" />
   </head>
 
   <body>
@@ -176,10 +179,14 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
             document.dispatchEvent(new CustomEvent("pgt:fin"));
           };
 
-          // On ne revele qu'une fois le gros du chargement passe : les polices
-          // posees (elles provoquent un reflow) puis deux images de repit. Sinon
+          // On ne revele qu'une fois le gros du chargement passe. Sinon
           // l'animation partage le fil d'execution avec l'initialisation de la
-          // page et saccade. Plafond a 450 ms pour ne jamais faire attendre.
+          // page, et la substitution des polices recalcule toute la mise en
+          // page pile pendant le retrait : c'est la saccade.
+          // Il faut DEUX choses : les polices posees, et le moteur d'animation
+          // initialise (decoupage des titres, declencheurs, mesures). On attend
+          // les deux, puis deux images de repit. Plafond a 1100 ms pour ne
+          // jamais rester bloque si l'un des deux ne repond pas.
           var reveler = function () {
             if (revele) return;
             revele = true;
@@ -188,12 +195,20 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
             setTimeout(nettoyer, 900); // filet, arme au vrai depart de l'animation
           };
 
-          if (document.fonts && document.fonts.ready) {
-            document.fonts.ready.then(function () {
-              requestAnimationFrame(function () { requestAnimationFrame(reveler); });
-            });
-          }
-          setTimeout(reveler, 450);
+          var restant = 2;
+          var pret = function () {
+            if (--restant > 0) return;
+            requestAnimationFrame(function () { requestAnimationFrame(reveler); });
+          };
+          // Moteur d'animation : il tourne plus haut dans le document, donc il a
+          // deja fini quand on arrive ici. Le drapeau le dit ; l'evenement reste
+          // par securite si l'ordre venait a changer.
+          if (window.__eleusisPret) pret();
+          else document.addEventListener("eleusis:pret", pret, { once: true });
+          // Polices : desormais servies par le site et prechargees, donc rapides.
+          if (document.fonts && document.fonts.ready) document.fonts.ready.then(pret);
+          else pret();
+          setTimeout(reveler, 700); // filet, ne devrait plus servir
         }
 
         // Retourne l'URL si le lien est interne et « navigable » (sinon null).

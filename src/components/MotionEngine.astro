@@ -11,11 +11,15 @@
  */
 ---
 
-<script is:inline src="https://cdn.jsdelivr.net/npm/lenis@1.1.13/dist/lenis.min.js"></script>
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
-<script is:inline src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
-<script is:inline src="https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js"></script>
+<!-- Bibliotheques servies depuis le domaine du site (public/vendor) plutot
+     que depuis cdnjs et jsdelivr : deux connexions externes de moins a ouvrir
+     avant que la page soit prete, et plus de dependance a un tiers.
+     Versions figees : lenis 1.1.13, gsap 3.12.5, split-type 0.3.4. -->
+<script is:inline src="/vendor/lenis.min.js"></script>
+<script is:inline src="/vendor/gsap.min.js"></script>
+<script is:inline src="/vendor/ScrollTrigger.min.js"></script>
+<script is:inline src="/vendor/CustomEase.min.js"></script>
+<script is:inline src="/vendor/split-type.min.js"></script>
 
 <script is:inline>
   (function () {
@@ -77,8 +81,20 @@
     }
 
     // Fail-safe : si reduced-motion ou CDN indisponible, tout reste visible.
+    // Le panneau de transition attend ce signal pour se retirer : tant qu'il
+    // couvre l'ecran, autant laisser la page finir son gros travail dessous.
+    // Drapeau ET evenement : ce script s'execute AVANT celui de la transition
+    // (le moteur est rendu plus haut dans le document), donc l'evenement seul
+    // serait toujours manque. Le drapeau couvre ce cas, l'evenement couvre
+    // l'ordre inverse si le gabarit change un jour.
+    var prevenir = function () {
+      window.__eleusisPret = true;
+      document.dispatchEvent(new CustomEvent("eleusis:pret"));
+    };
+
     if (reduce || !window.gsap || !window.Lenis || !window.ScrollTrigger) {
       root.classList.remove("js-anim");
+      prevenir();
       // compteurs : valeur finale directe (pas d'animation)
       document.querySelectorAll("[data-count]").forEach((el) => {
         el.textContent =
@@ -392,5 +408,8 @@
       document.fonts.ready.then(() => ScrollTrigger.refresh());
     }
     window.addEventListener("resize", () => ScrollTrigger.refresh());
+    // Initialisation terminee : decoupages de titres, declencheurs de
+    // defilement et mesures sont poses. Le panneau peut se retirer.
+    prevenir();
   })();
 </script>
