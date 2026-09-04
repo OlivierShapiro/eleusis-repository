@@ -93,7 +93,7 @@ const links = [
      animer un backdrop-filter coute bien plus cher que de le poser d'un coup,
      et le fondu etait imperceptible. */
   .nav.is-scrolled {
-    background: rgba(16, 16, 20, 0.55);
+    background: rgba(16, 16, 20, 0.38);
     backdrop-filter: blur(14px) saturate(1.3);
     -webkit-backdrop-filter: blur(14px) saturate(1.3);
     border-bottom-color: var(--line);
@@ -280,8 +280,12 @@ const links = [
     const navEl = document.querySelector(".nav");
     if (navEl) {
       const onScroll = () => {
-        if ((window.scrollY || 0) > 40) navEl.classList.add("is-scrolled");
-        else navEl.classList.remove("is-scrolled");
+        const defilee = (window.scrollY || 0) > 40;
+        navEl.classList.toggle("is-scrolled", defilee);
+        // le voile sombre du haut n'est pas un descendant de la barre : il lui
+        // faut un accroche sur la racine pour s'effacer quand la barre passe
+        // en verre depoli (sinon il bouche le flou, cf. global.css).
+        document.documentElement.classList.toggle("nav-defilee", defilee);
       };
       window.addEventListener("scroll", onScroll, { passive: true });
       onScroll();

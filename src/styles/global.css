@@ -201,7 +201,12 @@ p { max-width: var(--measure); }
   z-index: 40;
   pointer-events: none;
   background: linear-gradient(to bottom, #0d0d11 0%, rgba(13,13,17,0.82) 36%, rgba(13,13,17,0) 100%);
+  transition: opacity var(--dur-sign) var(--ease);
 }
+/* Une fois la page defilee, la barre a son propre fond en verre depoli : ce
+   voile n'a plus rien a masquer et, comme il part d'un noir OPAQUE, il bouchait
+   entierement le haut de la barre. Le flou ne montrait donc rien. */
+.nav-defilee .top-scrim { opacity: 0; }
 
 /* Fond principal dégradé (hero / grandes sections) */
 .bg-gradient { background: var(--bg-gradient); }
