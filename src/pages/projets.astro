@@ -145,11 +145,16 @@ const autres = projects
   /* ---------- En-tête fond vidéo ---------- */
   .phead { position: relative; overflow: hidden; background: #0f0f11;
     padding-top: calc(var(--nav-h) + clamp(56px, 14vh, 170px)); padding-bottom: clamp(48px, 9vw, 110px); }
-  .phead__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(0.8) brightness(0.5); }
+  .phead__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Le dernier plat aplat remplace le filter: brightness(0.5) qui etait pose
+     sur la video : un filtre CSS sur une video la fait repasser par une passe
+     GPU a chaque image lue. Un aplat noir a 50 % donne exactement le meme
+     resultat et ne coute rien. */
   .phead__scrim { position: absolute; inset: 0;
     background:
       radial-gradient(120% 90% at 78% -8%, rgba(40,70,120,0.28) 0%, rgba(20,20,28,0) 50%),
-      linear-gradient(to top, rgba(15,15,17,0.92) 0%, rgba(15,15,17,0.35) 55%, rgba(15,15,17,0.6) 100%); }
+      linear-gradient(to top, rgba(15,15,17,0.92) 0%, rgba(15,15,17,0.35) 55%, rgba(15,15,17,0.6) 100%),
+      linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)); }
   .phead__inner { position: relative; z-index: 2; }
   .phead__title { font-size: clamp(3.5rem, 14vw, 11rem); letter-spacing: 0.01em; margin-top: 0.1em; }
 
@@ -314,12 +319,20 @@ const autres = projects
   }
   .af__vigMedia :global(video) {
     object-fit: cover; display: block;
-    /* au repos les vignettes sont en retrait : une seule chose est allumée */
-    filter: brightness(0.5);
     scale: 1;
-    transition: filter 0.5s var(--ease), scale 0.9s var(--ease);
+    transition: scale 0.9s var(--ease);
   }
-  .af__vig:hover .af__vigMedia :global(video) { filter: brightness(1); scale: 1.05; }
+  .af__vig:hover .af__vigMedia :global(video) { scale: 1.05; }
+  /* Au repos les vignettes sont en retrait : une seule chose est allumée.
+     Un aplat noir plutot qu'un filter: brightness() sur la video, le rendu est
+     identique mais la video n'a plus a repasser par une passe GPU par image.
+     Seulement sur les vignettes qui ont une video, pas sur les cases a venir. */
+  .af__vig:not(.is-soon) .af__vigMedia::after {
+    content: ""; position: absolute; inset: 0;
+    background: #000; opacity: 0.5;
+    transition: opacity 0.5s var(--ease);
+  }
+  .af__vig:not(.is-soon):hover .af__vigMedia::after { opacity: 0; }
 
   .af__vigVoile {
     position: absolute; inset: 0; pointer-events: none;
@@ -381,7 +394,7 @@ const autres = projects
       scroll-snap-align: start;
     }
     .af__vig.is-soon { flex: 0 0 clamp(84px, 24vw, 118px); }
-    .af__vigMedia :global(video) { filter: brightness(0.62); }
+    .af__vig:not(.is-soon) .af__vigMedia::after { opacity: 0.38; }
   }
   /* ---------- En coulisses : mini galerie BTS ---------- */
   .bts {

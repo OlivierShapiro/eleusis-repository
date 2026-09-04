@@ -96,7 +96,10 @@
 
     // ---- Lenis smooth scroll (intégration canonique via gsap.ticker) ----
     const lenis = new Lenis({
-      duration: 1.1,
+      // 1.1 s pour se poser, c'est long : le defilement « traine » derriere la
+      // molette et se lit comme un manque de fluidite. 0.85 reste lisse mais
+      // repond tout de suite.
+      duration: 0.85,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
     lenis.on("scroll", ScrollTrigger.update);
@@ -169,12 +172,23 @@
     // Tout élément [data-marquee] (= la piste) doit contenir 2 copies → -50%.
     gsap.utils.toArray("[data-marquee]").forEach((track) => {
       const dur = parseFloat(track.getAttribute("data-marquee")) || 26;
-      gsap.to(track, {
+      const boucle = gsap.to(track, {
         xPercent: -50,
         duration: dur,
         ease: "none",
         repeat: -1,
       });
+      // Une boucle infinie fait recomposer sa couche a chaque image, meme
+      // quand elle est a 4000 px de l'ecran. On la suspend hors champ.
+      const veille = ScrollTrigger.create({
+        trigger: track,
+        start: "top bottom",
+        end: "bottom top",
+        onToggle: (self) => (self.isActive ? boucle.play() : boucle.pause()),
+      });
+      // onToggle ne se declenche qu'aux transitions : une bande deja hors
+      // ecran au chargement tournerait jusqu'au premier defilement.
+      if (!veille.isActive) boucle.pause();
     });
 
     // ---- Titres découpés : reveal ligne par ligne (+ signature opt-in) ----
