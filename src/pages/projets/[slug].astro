@@ -99,8 +99,16 @@ const filmSrc = yt
         <div class="clip__inner">
           {filmSrc ? (
             <>
-              {yt && (
-                <img class="pj-film__poster" src={`https://i.ytimg.com/vi/${project.embed!.id}/hqdefault.jpg`} alt="" loading="lazy" />
+              {/* Affiche du lecteur : on prend l'image locale du projet quand on
+                  l'a, plutot que la vignette YouTube. Une requete vers un
+                  domaine tiers de moins, et une image de meilleure qualite. */}
+              {(project.cardPoster || yt) && (
+                <img
+                  class="pj-film__poster"
+                  src={project.cardPoster ?? `https://i.ytimg.com/vi/${project.embed!.id}/hqdefault.jpg`}
+                  alt=""
+                  loading="lazy"
+                />
               )}
               <iframe
                 class="pj-film__iframe"
@@ -164,6 +172,7 @@ const filmSrc = yt
               category={o.category}
               ratio="16 / 9"
               cardVideo={o.cardVideo}
+              poster={o.cardPoster}
               embed={o.embed as any}
               video={o.video}
               href={`/projets/${o.slug}`}

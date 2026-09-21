@@ -66,6 +66,9 @@ const autres = projects
               poster={dernier.cardPoster}
               muted loop playsinline preload="none"
             ></video>
+          ) : dernier.cardPoster ? (
+            /* pas encore de boucle, mais une image du film : mieux qu'un cadre vide */
+            <img src={dernier.cardPoster} alt="" fetchpriority="high" />
           ) : (
             <span class="coming-soon"><span class="coming-soon__grad"></span></span>
           )}
@@ -195,14 +198,17 @@ const autres = projects
 
   .af__media { position: absolute; inset: 0; display: block; }
   .af__media :global(video),
+  .af__media :global(img),
   .af__media :global(.coming-soon) {
     position: absolute; inset: 0; width: 100%; height: 100%;
   }
-  .af__media :global(video) {
+  .af__media :global(video),
+  .af__media :global(img) {
     object-fit: cover; display: block;
     scale: 1; transition: scale 1.1s var(--ease);
   }
-  .af__scene:hover .af__media :global(video) { scale: 1.025; }
+  .af__scene:hover .af__media :global(video),
+  .af__scene:hover .af__media :global(img) { scale: 1.025; }
 
   /* voile : lisibilité du texte, plus dense en bas à gauche */
   .af__voile {

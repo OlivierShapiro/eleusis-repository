@@ -89,7 +89,7 @@ if (embed?.provider === "youtube") {
           loop
           playsinline
           preload="metadata"
-          poster={embedThumb || poster}
+          poster={poster || embedThumb}
         >
           <source src={cardVideo} type="video/mp4" />
         </video>
