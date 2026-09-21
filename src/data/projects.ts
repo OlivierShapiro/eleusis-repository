@@ -11,6 +11,8 @@ export interface Project {
   embed?: { provider: "youtube" | "vimeo"; id: string };
   video?: string;       // fallback (placeholders)
   cardVideo?: string;   // vidéo de couverture de la carte (lecture auto, boucle)
+  cardVideoAv1?: string; // même vidéo en AV1 : nettement plus légère à qualité
+                        // égale, servie en priorité, cardVideo sert de repli
   cardPoster?: string;  // 1re image de cardVideo : affichée avant que la vidéo
                         // n'arrive, et à la place de la vidéo si le visiteur a
                         // demandé des animations réduites
@@ -100,7 +102,10 @@ export const projects: Project[] = [
     category: "brand-film",
     latest: true,
     embed: { provider: "youtube", id: "jSQZmp9kkaw" },
-    cardVideo: "/videos/cartes/95-pilates.mp4",
+    // Ce projet occupe le grand cadre, affiché jusqu'à 1560 px de large : il lui
+    // faut une définition bien supérieure à celle des vignettes, qui font 326 px.
+    cardVideoAv1: "/videos/cartes/95-pilates.av1.mp4", // 2560x1440, 2.7 Mo
+    cardVideo: "/videos/cartes/95-pilates.mp4",        // repli 1920x1080, 4.6 Mo
     cardPoster: "/images/cartes/95-pilates.webp",
     client: "95 Pilates",
     year: "2026",

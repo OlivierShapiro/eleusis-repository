@@ -61,11 +61,16 @@ const autres = projects
       >
         <span class="af__media">
           {dernier.cardVideo ? (
-            <video
-              src={dernier.cardVideo}
-              poster={dernier.cardPoster}
-              muted loop playsinline preload="none"
-            ></video>
+            <video poster={dernier.cardPoster} muted loop playsinline preload="none">
+              {/* AV1 d'abord : meme definition pour deux fois moins lourd. Le
+                  navigateur prend la premiere source qu'il sait decoder, d'ou
+                  la chaine de codec explicite : sans elle, un navigateur sans
+                  AV1 accepterait le fichier puis echouerait a l'afficher. */}
+              {dernier.cardVideoAv1 && (
+                <source src={dernier.cardVideoAv1} type='video/mp4; codecs="av01.0.12M.08"' />
+              )}
+              <source src={dernier.cardVideo} type="video/mp4" />
+            </video>
           ) : dernier.cardPoster ? (
             /* pas encore de boucle, mais une image du film : mieux qu'un cadre vide */
             <img src={dernier.cardPoster} alt="" fetchpriority="high" />
