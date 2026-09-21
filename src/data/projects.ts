@@ -116,8 +116,9 @@ export const projects: Project[] = [
       ["Montage", "Olivier Shapiro"],
       ["Étalonnage", "Olivier Shapiro"],
     ],
+    description:
+      "Nous avons réalisé une vidéo publicitaire pour le studio 95 Pilates.\nLe but, une vidéo engageante visant les personnes hésitant à commencer par manque de confiance ou par méconnaissance du Pilates. C'est après avoir pris nettement connaissance de leur besoin réel que nous avons monté un storytelling adapté qui raconte leur histoire, et leur manière de communiquer.\nMerci à eux pour leur confiance !",
     stills: 6,
-    // description (« Notre approche ») : reste à écrire.
   },
   // ── Placeholders « à venir » : affichent un visuel « Prochainement »
   //    (dégradé animé) tant qu'aucun vrai projet n'est fourni. ──────────
