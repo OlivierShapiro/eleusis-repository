@@ -100,9 +100,7 @@ export const projects: Project[] = [
     category: "brand-film",
     latest: true,
     embed: { provider: "youtube", id: "jSQZmp9kkaw" },
-    // En attendant la vidéo de couverture en boucle, le grand cadre affiche
-    // cette image, tirée de la vidéo YouTube. Dès que le .mp4 arrive, il
-    // suffit d'ajouter cardVideo et de régénérer le poster depuis ce fichier.
+    cardVideo: "/videos/cartes/95-pilates.mp4",
     cardPoster: "/images/cartes/95-pilates.webp",
     client: "95 Pilates",
     year: "2026",
@@ -113,7 +111,8 @@ export const projects: Project[] = [
       ["Montage", "Olivier Shapiro"],
       ["Étalonnage", "Olivier Shapiro"],
     ],
-    // description et stills : à remplir quand le texte et les 6 photos arrivent.
+    stills: 6,
+    // description (« Notre approche ») : reste à écrire.
   },
   // ── Placeholders « à venir » : affichent un visuel « Prochainement »
   //    (dégradé animé) tant qu'aucun vrai projet n'est fourni. ──────────
