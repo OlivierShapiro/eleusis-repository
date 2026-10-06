@@ -1,8 +1,8 @@
 ---
-/** Fiche projet, version française.
+/** Project page, English version.
  *  Le gabarit est partagé : components/pages/Fiche.astro */
-import Fiche from "../../components/pages/Fiche.astro";
-import { projects } from "../../data/projects";
+import Fiche from "../../../components/pages/Fiche.astro";
+import { projects } from "../../../data/projects";
 
 export function getStaticPaths() {
   const reels = projects.filter((p) => !p.placeholder);
@@ -15,4 +15,4 @@ export function getStaticPaths() {
 const { project, others } = Astro.props;
 ---
 
-<Fiche project={project} others={others} lang="fr" />
+<Fiche project={project} others={others} lang="en" />

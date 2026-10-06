@@ -24,6 +24,20 @@ export interface Project {
   stills?: number;      // nb de stills dispo (public/images/projets/<slug>/still-0X.webp)
   placeholder?: boolean;
   latest?: boolean;     // dernier projet réalisé : mis en avant sur /projets
+  /** Version anglaise des seuls champs qui changent. Le titre n'y est pas :
+   *  c'est un nom propre. Un champ absent retombe sur le français. */
+  en?: {
+    cardType?: string;
+    role?: string;
+    description?: string;
+    credits?: [string, string][];
+    title?: string;
+  };
+}
+
+/** Projet dans la langue demandée. Le français est la source de vérité. */
+export function projetLocalise(p: Project, lang: string): Project {
+  return lang === "en" && p.en ? { ...p, ...p.en } : p;
 }
 
 export const projects: Project[] = [
@@ -48,6 +62,18 @@ export const projects: Project[] = [
       ["Musique", "Olivier Shapiro"],
     ],
     stills: 6,
+    en: {
+      cardType: "Football",
+      role: "Directing, colour grading, editing",
+      description:
+        "A project made with MPfootperf. and 1700Fribourg. We went out on the pitch to capture what training really is: the intensity, the bond between a coach and his players. Shot in Fribourg, graded in DaVinci Resolve. Thanks to them for the trust!",
+      credits: [
+        ["Directing", "Olivier Shapiro"],
+        ["Cinematography", "Olivier Shapiro, Arnaud Charrière"],
+        ["Editing", "Olivier Shapiro"],
+        ["Colour grading", "Olivier Shapiro"],
+      ],
+    },
   },
   {
     slug: "the-dancer",
@@ -69,6 +95,19 @@ export const projects: Project[] = [
       ["Musique", "Olivier Shapiro"],
     ],
     stills: 6,
+    en: {
+      cardType: "Dance",
+      role: "Directing, editing, colour grading",
+      description:
+        "A showreel made with Anya, a professional dancer. The aim was to capture how much her movement expresses, and what she feels.\nWhat is she trying to say through her dance?\nShot in natural backlight with a key light from the side, to lift the subject and push a contrast that amplifies the pressure you sense as she dances. A track by NF that adds to the chills, and a cold blue grade in DaVinci Resolve to carry the emotional weight.\n\nThank you Anya for wanting to work with me!",
+      credits: [
+        ["Directing", "Olivier Shapiro"],
+        ["Cinematography", "Olivier Shapiro"],
+        ["Editing", "Olivier Shapiro"],
+        ["Colour grading", "Olivier Shapiro"],
+        ["Music", "Olivier Shapiro"],
+      ],
+    },
   },
   {
     slug: "webacces",
@@ -91,6 +130,18 @@ export const projects: Project[] = [
       ["Musique", "Olivier Shapiro"],
     ],
     stills: 6,
+    en: {
+      cardType: "Corporate film",
+      role: "Directing, shooting, editing",
+      description:
+        "Back from the corporate shoot for WebAcces at the La Lorraine farm. It was quite an experience. Thank you for the welcome and for trusting us! Drone operator Arnaud Charrière (@arnaud_drone) was there too, helping me on this project during the shoot. Thanks to him.",
+      credits: [
+        ["Directing", "Olivier Shapiro"],
+        ["Cinematography", "Olivier Shapiro, Arnaud Charrière"],
+        ["Editing", "Olivier Shapiro"],
+        ["Colour grading", "Olivier Shapiro"],
+      ],
+    },
   },
   // Dernier projet réalisé : c'est lui qui occupe le grand cadre en haut de
   // /projets. Fiche créée à l'avance, il manque encore la vidéo de couverture,
@@ -119,9 +170,23 @@ export const projects: Project[] = [
     description:
       "Nous avons réalisé une vidéo publicitaire pour le studio 95 Pilates.\nLe but : une vidéo engageante visant les personnes hésitant à commencer par manque de confiance ou par méconnaissance du Pilates. C'est après avoir vraiment pris connaissance de leur besoin réel que nous avons monté un storytelling adapté qui raconte leur histoire, et leur manière de communiquer.\nMerci à eux pour leur confiance !",
     stills: 6,
+    en: {
+      cardType: "Sport",
+      role: "Directing, cinematography, editing, colour grading",
+      description:
+        "We made an advertising film for the 95 Pilates studio.\nThe aim: an engaging film aimed at people who hesitate to start, out of a lack of confidence or because they do not know what Pilates is. Only after really understanding what they needed did we build a story that matches theirs, and the way they speak.\nThank you to them for the trust!",
+      credits: [
+        ["Directing", "Olivier Shapiro"],
+        ["Cinematography", "Olivier Shapiro"],
+        ["Editing", "Olivier Shapiro"],
+        ["Colour grading", "Olivier Shapiro"],
+      ],
+    },
   },
   // ── Placeholders « à venir » : affichent un visuel « Prochainement »
   //    (dégradé animé) tant qu'aucun vrai projet n'est fourni. ──────────
-  { slug: "projet-05", title: "Projet 05", cardType: "Publicité", category: "publicite", placeholder: true },
-  { slug: "projet-06", title: "Projet 06", cardType: "Documentaire", category: "documentaire", placeholder: true },
+  { slug: "projet-05", title: "Projet 05", cardType: "Publicité", category: "publicite", placeholder: true,
+    en: { title: "Project 05", cardType: "Advertising" } },
+  { slug: "projet-06", title: "Projet 06", cardType: "Documentaire", category: "documentaire", placeholder: true,
+    en: { title: "Project 06", cardType: "Documentary" } },
 ];

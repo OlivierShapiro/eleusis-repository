@@ -8,9 +8,12 @@ import Nav from "../components/Nav.astro";
 import Footer from "../components/Footer.astro";
 import MotionEngine from "../components/MotionEngine.astro";
 
+import { textes, langues, traduireChemin, type Langue } from "../i18n";
+
 interface Props {
   title?: string;
   description?: string;
+  lang?: Langue;
   active?: string;
 }
 const {
@@ -18,10 +21,20 @@ const {
   description =
     "Eleusis, réalisation et production vidéo en Suisse romande. Films de marque, social, productions premium.",
   active = "",
+  lang = "fr",
 } = Astro.props;
+
+const t = textes(lang);
 
 // URLs absolues pour le SEO (Astro.site défini dans astro.config.mjs).
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
+
+// Equivalents entre langues, pour que Google comprenne que ce sont deux
+// versions d'une meme page et serve la bonne selon le visiteur.
+const cheminsAlternes: Record<Langue, string> = {
+  fr: traduireChemin(Astro.url.pathname, "fr"),
+  en: traduireChemin(Astro.url.pathname, "en"),
+};
 const ogImage = new URL("/og.jpg", Astro.site).href; // image à fournir : public/og.jpg
 
 // Adresse provisoire (.vercel.app) : on demande aux moteurs de recherche de ne
@@ -32,7 +45,7 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang={lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -44,6 +57,10 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {langues.map((l) => (
+      <link rel="alternate" hreflang={l} href={new URL(cheminsAlternes[l], Astro.site).href} />
+    ))}
+    <link rel="alternate" hreflang="x-default" href={new URL(cheminsAlternes.fr, Astro.site).href} />
     {adresseProvisoire && <meta name="robots" content="noindex, nofollow" />}
 
     <!-- Masque les éléments à animer AVANT le paint (pas de flash), seulement
@@ -75,7 +92,7 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:site_name" content="Eleusis" />
-    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:locale" content={lang === "fr" ? "fr_FR" : "en_US"} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
     <meta name="twitter:card" content="summary_large_image" />
@@ -96,7 +113,7 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
   </head>
 
   <body>
-    <a class="skip-link" href="#main">Aller au contenu</a>
+    <a class="skip-link" href="#main">{t.lienEvitement}</a>
     <div class="pgt" aria-hidden="true">
       <span class="pgt__sign">
         <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
@@ -105,11 +122,11 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
     </div>
     <div class="bg-texture" aria-hidden="true"></div>
     <div class="top-scrim" aria-hidden="true"></div>
-    <Nav active={active} />
+    <Nav active={active} lang={lang} />
     <main id="main">
       <slot />
     </main>
-    <Footer />
+    <Footer lang={lang} />
     <MotionEngine />
 
     <!-- ===== Transition de page (panneau + liseré rose) ===== -->

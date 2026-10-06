@@ -5,32 +5,39 @@
  * (liens empilés, reveal en cascade). Drop-in au load via MotionEngine.
  */
 import FrameMarks from "./FrameMarks.astro";
+import { textes, route, traduireChemin, type Langue } from "../i18n";
 
 interface Props {
-  active?: string;
+  /** Clé de la page courante ("projets", "contact"…), pas une adresse :
+   *  elle doit rester valable quelle que soit la langue. */
+  active?: "accueil" | "projets" | "process" | "apropos" | "contact" | "";
+  lang?: Langue;
 }
-const { active = "" } = Astro.props;
+const { active = "", lang = "fr" } = Astro.props;
+const t = textes(lang);
+const autreLangue = lang === "fr" ? "en" : "fr";
+const versAutre = traduireChemin(Astro.url.pathname, autreLangue);
 
 const links = [
-  { label: "Projets", href: "/projets" },
-  { label: "Process", href: "/process" },
-  { label: "À propos", href: "/a-propos" },
-  { label: "Contact", href: "/contact" },
+  { label: t.nav.liens.projets, cle: "projets" as const },
+  { label: t.nav.liens.process, cle: "process" as const },
+  { label: t.nav.liens.apropos, cle: "apropos" as const },
+  { label: t.nav.liens.contact, cle: "contact" as const },
 ];
 ---
 
 <header class="nav">
   <div class="container nav__inner">
-    <a class="nav__logo" href="/" aria-label="ELEUSIS, accueil">
-      <FrameMarks pad={7} drawn={false} class={active === "/" ? "is-home" : ""}><span class="nav__wordmark">ELEUSIS</span></FrameMarks>
+    <a class="nav__logo" href={route(lang, "accueil")} aria-label={t.nav.ariaLogo}>
+      <FrameMarks pad={7} drawn={false} class={active === "accueil" ? "is-home" : ""}><span class="nav__wordmark">ELEUSIS</span></FrameMarks>
     </a>
 
-    <nav class="nav__links" aria-label="Navigation principale">
+    <nav class="nav__links" aria-label={t.nav.ariaPrincipale}>
       {links.map((l) => (
         <a
-          class:list={["nav__link", { "is-active": active === l.href }]}
-          href={l.href}
-          aria-current={active === l.href ? "page" : undefined}
+          class:list={["nav__link", { "is-active": active === l.cle }]}
+          href={route(lang, l.cle)}
+          aria-current={active === l.cle ? "page" : undefined}
         >
           {l.label}
         </a>
@@ -41,12 +48,17 @@ const links = [
       </span>
     </nav>
 
-    <a class="btn-accent nav__cta" href="/contact">Démarrer un projet</a>
+    <div class="nav__actions">
+      <a class="nav__langue" href={versAutre} hreflang={autreLangue} aria-label={t.versAutreLangue}>
+        {autreLangue.toUpperCase()}
+      </a>
+      <a class="btn-accent nav__cta" href={route(lang, "contact")}>{t.nav.cta}</a>
+    </div>
 
     <button
       class="nav__burger"
       type="button"
-      aria-label="Ouvrir le menu"
+      aria-label={t.nav.ariaOuvrir}
       aria-expanded="false"
       aria-controls="mobile-menu"
     >
@@ -57,17 +69,18 @@ const links = [
 
 <!-- Menu plein écran (mobile) -->
 <div class="nav__overlay" id="mobile-menu">
-  <nav class="nav__overlay-inner" aria-label="Menu mobile">
+  <nav class="nav__overlay-inner" aria-label={t.nav.ariaMobile}>
     {links.map((l) => (
       <a
-        class:list={["nav__overlay-link", { "is-active": active === l.href }]}
-        href={l.href}
-        aria-current={active === l.href ? "page" : undefined}
+        class:list={["nav__overlay-link", { "is-active": active === l.cle }]}
+        href={route(lang, l.cle)}
+        aria-current={active === l.cle ? "page" : undefined}
       >
         {l.label}
       </a>
     ))}
-    <a class="btn-accent nav__overlay-cta" href="/contact">Démarrer un projet</a>
+    <a class="nav__overlay-langue" href={versAutre} hreflang={autreLangue}>{t.versAutreLangue}</a>
+    <a class="btn-accent nav__overlay-cta" href={route(lang, "contact")}>{t.nav.cta}</a>
   </nav>
 </div>
 
@@ -99,6 +112,27 @@ const links = [
     border-bottom-color: var(--line);
   }
   .nav.is-scrolled .nav__link { color: var(--text); }
+
+  /* Sélecteur de langue : discret, au même niveau que les liens, juste avant
+     le bouton d'action pour qu'il se trouve sans voler la vedette. */
+  /* Le sélecteur et le bouton sont regroupés : la barre garde ainsi ses trois
+     blocs (logo, liens, actions) et la répartition d'origine ne bouge pas. */
+  .nav__actions { display: flex; align-items: center; gap: clamp(10px, 1.4vw, 20px); }
+  .nav__langue {
+    padding: 0.4em 0.7em;
+    font-family: var(--font-mono); font-weight: 500;
+    font-size: 0.72rem; letter-spacing: 0.14em;
+    color: var(--text-faint);
+    border: 1px solid var(--line-strong); border-radius: 2px;
+    transition: color var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease);
+  }
+  .nav__langue:hover { color: var(--text); border-color: var(--text-faint); }
+  .nav__overlay-langue {
+    font-family: var(--font-mono); text-transform: uppercase;
+    letter-spacing: 0.14em; font-size: 0.8rem; color: var(--text-faint);
+    margin-top: 0.6em;
+  }
+  @media (max-width: 760px) { .nav__langue { display: none; } }
   .nav__inner {
     display: flex;
     align-items: center;
