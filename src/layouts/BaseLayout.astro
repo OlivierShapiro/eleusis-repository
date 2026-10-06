@@ -49,7 +49,13 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Icônes. Google récupère l'icône du site séparément des pages et attend
+         un carré d'au moins 48 px ; il cherche aussi /favicon.ico à la racine.
+         On déclare donc les deux, plus le SVG pour les écrans fins. -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="theme-color" content="#121214" />
     <meta name="generator" content={Astro.generator} />
