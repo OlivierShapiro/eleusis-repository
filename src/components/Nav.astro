@@ -5,7 +5,7 @@
  * (liens empilés, reveal en cascade). Drop-in au load via MotionEngine.
  */
 import FrameMarks from "./FrameMarks.astro";
-import { textes, route, traduireChemin, type Langue } from "../i18n";
+import { textes, route, traduireChemin, langues, type Langue } from "../i18n";
 
 interface Props {
   /** Clé de la page courante ("projets", "contact"…), pas une adresse :
@@ -49,9 +49,20 @@ const links = [
     </nav>
 
     <div class="nav__actions">
-      <a class="nav__langue" href={versAutre} hreflang={autreLangue} aria-label={t.versAutreLangue}>
-        {autreLangue.toUpperCase()}
-      </a>
+      <div class="nav__langues" role="group" aria-label="Langue / Language">
+        {langues.map((l, i) => (
+          <>
+            {i > 0 && <span class="nav__sep" aria-hidden="true">/</span>}
+            {l === lang ? (
+              <span class="nav__langue is-active" aria-current="true">{l.toUpperCase()}</span>
+            ) : (
+              <a class="nav__langue" href={traduireChemin(Astro.url.pathname, l)} hreflang={l}>
+                {l.toUpperCase()}
+              </a>
+            )}
+          </>
+        ))}
+      </div>
       <a class="btn-accent nav__cta" href={route(lang, "contact")}>{t.nav.cta}</a>
     </div>
 
@@ -79,7 +90,18 @@ const links = [
         {l.label}
       </a>
     ))}
-    <a class="nav__overlay-langue" href={versAutre} hreflang={autreLangue}>{t.versAutreLangue}</a>
+    <div class="nav__overlay-langues" role="group" aria-label="Langue / Language">
+      {langues.map((l, i) => (
+        <>
+          {i > 0 && <span class="nav__sep" aria-hidden="true">/</span>}
+          {l === lang ? (
+            <span class="nav__langue is-active" aria-current="true">{l.toUpperCase()}</span>
+          ) : (
+            <a class="nav__langue" href={traduireChemin(Astro.url.pathname, l)} hreflang={l}>{l.toUpperCase()}</a>
+          )}
+        </>
+      ))}
+    </div>
     <a class="btn-accent nav__overlay-cta" href={route(lang, "contact")}>{t.nav.cta}</a>
   </nav>
 </div>
@@ -118,21 +140,28 @@ const links = [
   /* Le sélecteur et le bouton sont regroupés : la barre garde ainsi ses trois
      blocs (logo, liens, actions) et la répartition d'origine ne bouge pas. */
   .nav__actions { display: flex; align-items: center; gap: clamp(10px, 1.4vw, 20px); }
+
+  /* Sélecteur de langue : les DEUX langues sont affichées, la courante en
+     clair. Un seul code « EN » isolé ne se lit pas comme un choix, on passe
+     devant sans le voir. Montrer la paire rend l'alternative évidente. */
+  .nav__langues { display: flex; align-items: center; gap: 0.5em; }
   .nav__langue {
-    padding: 0.4em 0.7em;
     font-family: var(--font-mono); font-weight: 500;
-    font-size: 0.72rem; letter-spacing: 0.14em;
-    color: var(--text-faint);
-    border: 1px solid var(--line-strong); border-radius: 2px;
-    transition: color var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease);
+    font-size: 0.76rem; letter-spacing: 0.12em;
+    color: var(--text-muted);
+    transition: color var(--dur-sign) var(--ease);
   }
-  .nav__langue:hover { color: var(--text); border-color: var(--text-faint); }
-  .nav__overlay-langue {
-    font-family: var(--font-mono); text-transform: uppercase;
-    letter-spacing: 0.14em; font-size: 0.8rem; color: var(--text-faint);
-    margin-top: 0.6em;
+  .nav__langue.is-active { color: var(--text); }
+  a.nav__langue:hover { color: var(--accent); }
+  .nav__sep { color: var(--line-strong); font-size: 0.76rem; }
+
+  .nav__overlay-langues {
+    display: flex; align-items: center; gap: 0.6em;
+    margin-top: 1.2em;
   }
-  @media (max-width: 760px) { .nav__langue { display: none; } }
+  .nav__overlay-langues .nav__langue { font-size: 1rem; letter-spacing: 0.14em; }
+
+  @media (max-width: 760px) { .nav__langues { display: none; } }
   .nav__inner {
     display: flex;
     align-items: center;
