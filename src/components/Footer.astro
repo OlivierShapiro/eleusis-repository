@@ -128,6 +128,12 @@ const cols = [
     font-family: var(--font-mono);
     font-size: 0.82rem;
     color: var(--text-muted);
+    /* Au doigt, un lien de 17 px de haut se rate une fois sur deux. On etend
+       la zone sensible sans deplacer le texte : le padding vertical est
+       compense par une marge negative, la mise en page ne bouge pas. */
+    display: inline-block;
+    padding-block: 0.5em;
+    margin-block: -0.5em;
   }
   .footer__link:hover { color: var(--text); }
 

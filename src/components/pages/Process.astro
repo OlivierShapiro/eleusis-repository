@@ -311,6 +311,15 @@ const scatter = {
     /* mobile : la ligne est à gauche (pas au centre) → pas de glissement latéral */
     .proc__step:nth-child(odd).is-active .proc__board,
     .proc__step:nth-child(even).is-active .proc__board { translate: 0 !important; }
+    /* L'écartement des plans suppose deux colonnes autour d'une ligne centrale.
+       Sur mobile la ligne est à gauche et la planche ne fait que 299 px : le
+       décalage poussait la première image hors de l'écran, et l'agrandissement
+       donnait cette impression de zoom où l'on ne voit plus rien. On annule le
+       décalage et on calme l'échelle. */
+    .proc__step.is-active .proc__pin {
+      translate: 0 !important;
+      scale: 1.06;
+    }
     .proc__step:nth-child(odd) .proc__card,
     .proc__step:nth-child(even) .proc__card { order: 2; align-items: flex-start; text-align: left; }
     .proc__dot { left: 1.5px; top: 0; margin: 0; }

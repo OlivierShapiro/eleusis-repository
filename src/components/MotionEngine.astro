@@ -104,6 +104,10 @@
     }
 
     gsap.registerPlugin(ScrollTrigger);
+    // Sur mobile, afficher ou masquer la barre d'adresse change la hauteur de
+    // la fenetre et passe pour un redimensionnement. Sans ce reglage, chaque
+    // repli de barre provoque un recalcul complet en plein defilement.
+    ScrollTrigger.config({ ignoreMobileResize: true });
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     if (window.CustomEase) {
       CustomEase.create("eleusis", "M0,0 C0.16,1 0.3,1 1,1"); // = cubic-bezier(0.16,1,0.3,1)
@@ -407,7 +411,11 @@
     if (document.fonts && document.fonts.ready) {
       document.fonts.ready.then(() => ScrollTrigger.refresh());
     }
-    window.addEventListener("resize", () => ScrollTrigger.refresh());
+    // Pas d'ecouteur "resize" manuel ici : ScrollTrigger se rafraichit deja
+    // tout seul, de facon differee. Un rappel direct et sans limitation
+    // recalculait TOUS les declencheurs a chaque evenement, et sur mobile la
+    // barre d'adresse qui se replie pendant le defilement en declenche en
+    // rafale. C'etait la principale source de saccades sur telephone.
     // Initialisation terminee : decoupages de titres, declencheurs de
     // defilement et mesures sont poses. Le panneau peut se retirer.
     prevenir();

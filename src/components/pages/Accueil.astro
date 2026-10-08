@@ -66,7 +66,7 @@ const clients = [
         type={s.sub}
         index={s.index}
         total={total}
-        height="88vh"
+        height="88svh"
         mediaLabel="IMAGE"
         image={s.image}
         interactive={false}
@@ -109,6 +109,7 @@ const clients = [
        débordait d'autant sous la ligne de flottaison et son centre tombait trop
        bas. On lui donne l'espace réellement visible → contenu vraiment centré. */
     min-height: calc(100vh - var(--nav-h));
+    min-height: calc(100svh - var(--nav-h));
     display: flex;
     align-items: center;
     overflow: hidden;

@@ -96,7 +96,12 @@
 * { margin: 0; }
 html { -webkit-text-size-adjust: 100%; }
 body {
+  /* svh = hauteur de fenetre la PLUS PETITE, barre d'adresse mobile deployee.
+     Contrairement a vh, elle ne change pas quand la barre se replie : la page
+     ne se remet donc pas en page en plein defilement. La ligne vh reste en
+     repli pour les navigateurs qui ne connaissent pas svh. */
   min-height: 100vh;
+  min-height: 100svh;
   position: relative; /* ancre .bg-texture (absolute) sur toute la hauteur du document */
   background-color: #0f0f11; /* secours opaque (overscroll) — la texture est posée par .bg-texture */
   color: var(--text);

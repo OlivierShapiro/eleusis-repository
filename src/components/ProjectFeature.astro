@@ -20,7 +20,7 @@ interface Props {
   href?: string;
   video?: string;
   poster?: string;
-  height?: string;   // hauteur du média, ex "88vh"
+  height?: string;   // hauteur du média, ex "88svh"
   mediaLabel?: string; // libellé du placeholder (ex. "VIDÉO" ou "IMAGE")
   image?: string;    // chemin image (si pas de vidéo) — ex "/images/accueil-01.jpg"
   interactive?: boolean; // false = image pure (pas de lien, pas d'effet au survol)
@@ -35,7 +35,7 @@ const {
   href = "/projets",
   video,
   poster,
-  height = "88vh",
+  height = "88svh",
   mediaLabel = "VIDÉO",
   image,
   interactive = true,

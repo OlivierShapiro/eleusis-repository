@@ -288,6 +288,16 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
     transition: color var(--dur-sign) var(--ease);
   }
   .ct-info__email:hover { color: var(--accent); }
+
+  /* Zones tactiles : l'adresse e-mail et les liens réseaux ne faisaient que
+     17 à 19 px de haut, on les rate au doigt. Le remplissage vertical est
+     compensé par une marge négative, donc rien ne bouge visuellement. */
+  .ct-info__email,
+  .ct-info__socials a {
+    display: inline-block;
+    padding-block: 0.5em;
+    margin-block: -0.5em;
+  }
   .ct-info__loc { font-family: var(--font-mono); font-size: 0.95rem; }
   .ct-info__block .label { margin-bottom: 0.9em; }
   .ct-info__socials { display: flex; flex-direction: column; gap: 0.6em; }
