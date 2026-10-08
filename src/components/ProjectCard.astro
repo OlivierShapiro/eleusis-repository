@@ -324,4 +324,18 @@ if (embed?.provider === "youtube") {
     font-size: 0.82rem;
     color: var(--text);
   }
+
+  @media (max-width: 760px) {
+    /* Meme principe, et c'est plus grave ici : le filtre porte sur des videos
+       en lecture, donc il repasse sur CHAQUE image affichee. L'aplat rend le
+       meme resultat sans rien couter. */
+    .card__video,
+    .card__embed-thumb,
+    .card__placeholder { filter: none; }
+    .card__scrim {
+      background:
+        linear-gradient(to top, rgba(14,14,18,0.85) 0%, rgba(14,14,18,0) 45%),
+        linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4));
+    }
+  }
 </style>

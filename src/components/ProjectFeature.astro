@@ -202,4 +202,18 @@ const {
   .feature--static:focus-visible .feature__client { transform: none; }
   .feature--static:hover .feature__scrim,
   .feature--static:focus-visible .feature__scrim { opacity: 1; }
+
+  @media (max-width: 760px) {
+    /* Un filtre couleur sur une image de 375 x 715 force une passe de rendu
+       separee, quatre fois sur cette page. On obtient exactement le meme
+       assombrissement avec un aplat noir, qui ne coute rien, et on laisse
+       tomber la desaturation : imperceptible a cette echelle, et c'est elle
+       seule qui imposait encore un filtre. */
+    .feature__layer { filter: none; }
+    .feature__scrim {
+      background:
+        linear-gradient(to top, rgba(15,15,17,0.92) 0%, rgba(15,15,17,0) 55%),
+        linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4));
+    }
+  }
 </style>
