@@ -37,11 +37,37 @@ const filmSrc = yt
   : vimeo
     ? `https://player.vimeo.com/video/${project.embed!.id}`
     : "";
+// Description pour les moteurs de recherche. Le texte « Notre approche » fait
+// 280 a 600 caracteres selon les projets ; Google coupe vers 160 et laisse une
+// phrase tranchee en plein milieu. On recompose donc a partir de phrases
+// ENTIERES, en s'arretant avant la limite. La page elle-meme n'est pas touchee.
+function descriptionCourte(texte: string, limite = 160): string {
+  const plat = texte.replace(/\s+/g, " ").trim();
+  if (plat.length <= limite) return plat;
+  // on ne coupe qu'a une vraie fin de phrase, c'est-a-dire suivie d'une
+  // majuscule : sinon « MPfootperf. et 1700Fribourg » serait scinde a tort.
+  const phrases = plat.split(/(?<=[.!?])\s+(?=[A-ZÀ-Ü])/);
+  let out = "";
+  for (const ph of phrases) {
+    const essai = out ? out + " " + ph : ph;
+    if (essai.length > limite) break;
+    out = essai;
+  }
+  if (out) return out;
+  // phrase d'ouverture deja trop longue : on tronque sur un mot
+  const coupe = plat.slice(0, limite - 1);
+  return coupe.slice(0, coupe.lastIndexOf(" ")) + "…";
+}
+
+const descriptionMeta = project.description
+  ? descriptionCourte(project.description)
+  : `${project.title}${t.fiche.descriptionDefaut}`;
+
 ---
 
 <BaseLayout
   title={`${project.title} · Eleusis`}
-  description={project.description || `${project.title}${t.fiche.descriptionDefaut}`}
+  description={descriptionMeta}
   active="projets"
   lang={lang}
 >
