@@ -156,9 +156,9 @@ export default {
   },
 
   accueil: {
-    titreOnglet: "Eleusis, production vidéo en Suisse romande",
+    titreOnglet: "Eleusis, studio de production vidéo en Suisse",
     description:
-      "Eleusis, réalisation et production vidéo en Suisse romande. Films de marque, social, productions premium.",
+      "Nous racontons votre histoire à travers l'image. Production de films de marque, de sport, publicité et documentaire.",
     sourcil: "// Production vidéo, Based in Switzerland",
     accroche: "Nous racontons votre histoire",
     explorer: "Explorer",

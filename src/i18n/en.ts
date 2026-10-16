@@ -158,7 +158,7 @@ export default {
   accueil: {
     titreOnglet: "Eleusis, video production studio in Switzerland",
     description:
-      "Eleusis, video direction and production based in Switzerland. Brand films, social, premium productions.",
+      "We tell your story through images. Brand films, sport, advertising and documentary.",
     sourcil: "// Video production, Based in Switzerland",
     accroche: "We tell your story",
     explorer: "Explore",
