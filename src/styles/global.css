@@ -275,11 +275,17 @@ p { max-width: var(--measure); }
   content: "";
   position: absolute;
   inset: 0;
-  /* Texture en essai. Pour revenir a la precedente, remettre :
-     url("/images/texture/film-overlay.png") */
-  background: url("/images/texture/film-overlay-2.webp") center / cover no-repeat;
+  /* Texture en essai : sac plastique froisse, tourne en paysage, recadre hors
+     soudures, couture et texte imprime, puis niveaux ecrases pour ne garder
+     que les reflets des plis sur noir pur. Sans ce traitement elle etait 25
+     fois plus lumineuse que la pellicule et aurait pose un voile gris.
+     Elle est donc plus dense que les deux autres : 6 % ici, contre 9 % pour
+     elles. Pour revenir en arriere, remettre le fichier ET l'opacite :
+       film-overlay.png     a 0.09  (pellicule d'origine)
+       film-overlay-2.webp  a 0.09  (rayures verticales de projecteur) */
+  background: url("/images/texture/plastique.webp") center / cover no-repeat;
   mix-blend-mode: screen;
-  opacity: var(--film-opacity, 0.09);
+  opacity: var(--film-opacity, 0.06);
 }
 /* Vignette par-dessus (fusion normale → le noir des bords reste visible). */
 .film-fx::after {
