@@ -275,7 +275,9 @@ p { max-width: var(--measure); }
   content: "";
   position: absolute;
   inset: 0;
-  background: url("/images/texture/film-overlay.png") center / cover no-repeat;
+  /* Texture en essai. Pour revenir a la precedente, remettre :
+     url("/images/texture/film-overlay.png") */
+  background: url("/images/texture/film-overlay-2.webp") center / cover no-repeat;
   mix-blend-mode: screen;
   opacity: var(--film-opacity, 0.09);
 }
