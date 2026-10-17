@@ -16,6 +16,11 @@ interface LogoItem {
    *  apparaissent en décalant tout. Avec elles, la place est réservée d'emblée. */
   w?: number;
   h?: number;
+  /** Opacité au repos propre à ce logo (0.8 par défaut). */
+  opacite?: number;
+  /** Logo noir sur fond transparent : on l'inverse en blanc, sinon il
+   *  disparaît sur la bande sombre quelle que soit son opacité. */
+  inverser?: boolean;
 }
 interface Props {
   logos?: LogoItem[];
@@ -49,7 +54,19 @@ const repeats = Math.max(3, Math.ceil(22 / logos.length));
           logos.map((logo) => (
             <div class="marquee__item">
               {logo.src ? (
-                <img class="marquee__logo" src={logo.src} alt={logo.name} width={logo.w} height={logo.h} loading="lazy" decoding="async" />
+                <img
+                  class="marquee__logo"
+                  src={logo.src}
+                  alt={logo.name}
+                  width={logo.w}
+                  height={logo.h}
+                  loading="lazy"
+                  decoding="async"
+                  style={[
+                    logo.opacite !== undefined && `--logo-op:${logo.opacite}`,
+                    logo.inverser && `--logo-inv:1`,
+                  ].filter(Boolean).join(";") || undefined}
+                />
               ) : (
                 <span class="marquee__placeholder">[ {logo.name.toUpperCase()} ]</span>
               )}
@@ -91,11 +108,11 @@ const repeats = Math.max(3, Math.ceil(22 / logos.length));
     height: 100%;
     width: auto;
     object-fit: contain;
-    filter: grayscale(1);
-    opacity: 0.8;
+    filter: grayscale(1) invert(var(--logo-inv, 0));
+    opacity: var(--logo-op, 0.8);
     transition: opacity var(--dur-reveal) var(--ease), filter var(--dur-reveal) var(--ease);
   }
-  .marquee:hover .marquee__logo { opacity: 1; filter: grayscale(0); }
+  .marquee:hover .marquee__logo { opacity: 1; filter: grayscale(0) invert(var(--logo-inv, 0)); }
 
   /* Slot placeholder en attendant les vrais logos. */
   .marquee__placeholder {
