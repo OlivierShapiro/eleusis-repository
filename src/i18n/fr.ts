@@ -163,6 +163,7 @@ export default {
     accroche: "Nous racontons votre histoire",
     explorer: "Explorer",
     ariaExplorer: "Explorer, descendre à la première image",
+    logosClients: "Ils nous font confiance",
     voirTout: "Voir tous les projets",
     vitrine: [
       { label: "Agence", sub: "Studio de réalisation vidéo" },

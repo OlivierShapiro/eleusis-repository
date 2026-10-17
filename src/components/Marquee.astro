@@ -11,11 +11,19 @@
 interface LogoItem {
   name: string;
   src?: string;
+  /** Dimensions réelles du fichier. Sans elles, un logo pas encore chargé fait
+   *  0 px de large : la bande se calcule sur une largeur fausse et les logos
+   *  apparaissent en décalant tout. Avec elles, la place est réservée d'emblée. */
+  w?: number;
+  h?: number;
 }
 interface Props {
   logos?: LogoItem[];
+  /** Intitulé lu par les lecteurs d'écran : il dépend de la langue. */
+  label?: string;
 }
 const {
+  label = "Ils nous font confiance",
   logos = [
     { name: "Logo 01" },
     { name: "Logo 02" },
@@ -33,7 +41,7 @@ const {
 const repeats = Math.max(3, Math.ceil(22 / logos.length));
 ---
 
-<section class="marquee" aria-label="Ils nous font confiance">
+<section class="marquee" aria-label={label}>
   <div class="marquee__track" data-marquee="26">
     {Array.from({ length: 2 }).map(() => (
       <div class="marquee__group" aria-hidden="true">
@@ -41,7 +49,7 @@ const repeats = Math.max(3, Math.ceil(22 / logos.length));
           logos.map((logo) => (
             <div class="marquee__item">
               {logo.src ? (
-                <img class="marquee__logo" src={logo.src} alt={logo.name} loading="lazy" />
+                <img class="marquee__logo" src={logo.src} alt={logo.name} width={logo.w} height={logo.h} loading="lazy" decoding="async" />
               ) : (
                 <span class="marquee__placeholder">[ {logo.name.toUpperCase()} ]</span>
               )}

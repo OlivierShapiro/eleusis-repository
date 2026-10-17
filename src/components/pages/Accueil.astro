@@ -25,8 +25,9 @@ const total = String(showcase.length).padStart(2, "0");
 
 // Logos clients (bande défilante).
 const clients = [
-  { name: "MP Foot Perf", src: "/logos/MPfootPerf.webp" },
-  { name: "WebAccès", src: "/logos/WebAcces.webp" },
+  { name: "MP Foot Perf", src: "/logos/MPfootPerf.webp", w: 600, h: 600 },
+  { name: "WebAccès", src: "/logos/WebAcces.webp", w: 512, h: 512 },
+  { name: "95 Pilates", src: "/logos/95Pilates.webp", w: 222, h: 138 },
 ];
 ---
 
@@ -56,7 +57,7 @@ const clients = [
   </section>
 
   <!-- ============ MARQUEE (logos clients) ============ -->
-  <Marquee logos={clients} />
+  <Marquee logos={clients} label={t.accueil.logosClients} />
 
   <!-- ============ EN IMAGES : bande plein écran (images, pas des projets) ============ -->
   <section class="reel" id="reel">
