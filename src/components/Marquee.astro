@@ -4,7 +4,7 @@
  * Animation : boucle infinie (GSAP, pilotée par MotionEngine) + pause au hover.
  *
  * Logos : prop `logos` = tableau de { name, src? }.
- *   - src fourni  → <img> (filtre grayscale, s'éclaircit au hover)
+ *   - src fourni  → <img> (en couleur)
  *   - sinon       → slot placeholder « [ LOGO 0X ] »
  * Tant qu'aucun logo n'est fourni, 6 slots placeholder. PLACEHOLDERS.
  */
@@ -16,7 +16,7 @@ interface LogoItem {
    *  apparaissent en décalant tout. Avec elles, la place est réservée d'emblée. */
   w?: number;
   h?: number;
-  /** Opacité au repos propre à ce logo (0.8 par défaut). */
+  /** Opacité propre à ce logo (1 par défaut). */
   opacite?: number;
   /** Logo noir sur fond transparent : on l'inverse en blanc, sinon il
    *  disparaît sur la bande sombre quelle que soit son opacité. */
@@ -103,16 +103,14 @@ const repeats = Math.max(3, Math.ceil(22 / logos.length));
     justify-content: center;
     height: clamp(30px, 3.4vw, 46px);
   }
-  /* Vrais logos (mono-chrome, s'éclaircissent au survol de la bande). */
+  /* Vrais logos : toujours en couleur, sans effet au survol. */
   .marquee__logo {
     height: 100%;
     width: auto;
     object-fit: contain;
-    filter: grayscale(1) invert(var(--logo-inv, 0));
-    opacity: var(--logo-op, 0.8);
-    transition: opacity var(--dur-reveal) var(--ease), filter var(--dur-reveal) var(--ease);
+    filter: invert(var(--logo-inv, 0));
+    opacity: var(--logo-op, 1);
   }
-  .marquee:hover .marquee__logo { opacity: 1; filter: grayscale(0) invert(var(--logo-inv, 0)); }
 
   /* Slot placeholder en attendant les vrais logos. */
   .marquee__placeholder {

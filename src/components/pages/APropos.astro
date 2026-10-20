@@ -28,12 +28,14 @@ const souvenirsLayout = [
   { t: "48%", l: "71%", w: "clamp(150px, 17vw, 240px)", r: "-3deg",   cap: t.apropos.legendes[5],   align: "right", p: -18 },
 ];
 
+// `afficher: false` : emplacement « Peut-être toi » gardé sous le coude pour de
+// futurs membres, mais masqué sur le site. Passer à true pour le réafficher.
 const team = [
-  { name: "Olivier Shapiro", role: t.apropos.roles[0], instagram: "https://www.instagram.com/oliviershapiro/", photo: true },
-  { name: "Arnaud Charrière", role: t.apropos.roles[1], instagram: "https://www.instagram.com/arnaud_drone/", photo: true },
-  { name: t.apropos.placeNom, role: t.apropos.placeRole, instagram: "", photo: false },
-  { name: t.apropos.placeNom, role: t.apropos.placeRole, instagram: "", photo: false },
-];
+  { name: "Olivier Shapiro", role: t.apropos.roles[0], instagram: "https://www.instagram.com/oliviershapiro/", photo: true, afficher: true },
+  { name: "Arnaud Charrière", role: t.apropos.roles[1], instagram: "https://www.instagram.com/arnaud_drone/", photo: true, afficher: true },
+  { name: t.apropos.placeNom, role: t.apropos.placeRole, instagram: "", photo: false, afficher: false },
+  { name: t.apropos.placeNom, role: t.apropos.placeRole, instagram: "", photo: false, afficher: false },
+].filter((m) => m.afficher);
 
 // Showreel ouvert par la notification (section Récit). PLACEHOLDER tant que le
 // vrai showreel n'est pas fourni — remplacer par :
@@ -279,7 +281,7 @@ const srSrc = srEmbed || showreel.video || "";
   .ab-team__head { margin-bottom: clamp(28px, 4vw, 52px); }
   .ab-team__title { font-size: clamp(2rem, 4.5vw, 3.6rem); margin-top: 0.4em; max-width: 16ch; }
   /* toutes les cartes de la même taille (pas de hiérarchie) — s'adapte au nb de membres */
-  .ab-team__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: clamp(20px, 3vw, 44px); align-items: start; }
+  .ab-team__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(20px, 3vw, 44px); align-items: start; }
   .ab-member { margin: 0; }
   .ab-member__photo {
     display: block;
