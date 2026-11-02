@@ -135,6 +135,65 @@ const adresseProvisoire = (Astro.site?.hostname || "").endsWith("vercel.app");
     <Footer lang={lang} />
     <MotionEngine />
 
+    <!-- ===== Retour au toucher (styles : .is-pressed dans global.css) ===== -->
+    <script is:inline>
+      (function () {
+        var CIBLES = ".btn-accent, .nav__burger, .hero__scroll, .chip, .sr-notif, .sr-modal__close, .af__scene, a.af__vig, .card__link, .ab-member__photo.is-link, .nav__logo, .nav__link, .nav__langue, .nav__overlay-link, .footer__link, .reel__all, .ct-info a";
+        var ATTENTE = 70;  // ms avant d'allumer au doigt : le temps de voir si c'est un défilement
+        var FLASH = 120;   // ms d'allumage pour un tap plus rapide que cette attente
+        var SEUIL = 8;     // px de déplacement au-delà desquels ce n'est plus un appui
+        var el = null, minuteur = null, x = 0, y = 0;
+
+        function annuler() {
+          clearTimeout(minuteur);
+          minuteur = null;
+          if (el) el.classList.remove("is-pressed");
+          el = null;
+        }
+
+        document.addEventListener("pointerdown", function (e) {
+          annuler();
+          if (e.button !== 0 || !e.target.closest) return;
+          el = e.target.closest(CIBLES);
+          if (!el) return;
+          if (e.pointerType === "touch") {
+            x = e.clientX;
+            y = e.clientY;
+            minuteur = setTimeout(function () {
+              minuteur = null;
+              if (el) el.classList.add("is-pressed");
+            }, ATTENTE);
+          } else {
+            el.classList.add("is-pressed");
+          }
+        }, { passive: true });
+
+        document.addEventListener("pointermove", function (e) {
+          if (el && e.pointerType === "touch" && Math.hypot(e.clientX - x, e.clientY - y) > SEUIL) annuler();
+        }, { passive: true });
+
+        document.addEventListener("pointerup", function () {
+          if (!el) return;
+          if (minuteur) {
+            // Tap très rapide : on allume quand même, brièvement.
+            clearTimeout(minuteur);
+            minuteur = null;
+            var tape = el;
+            el = null;
+            tape.classList.add("is-pressed");
+            setTimeout(function () { tape.classList.remove("is-pressed"); }, FLASH);
+          } else {
+            annuler();
+          }
+        }, { passive: true });
+
+        // Le navigateur reprend la main (défilement, glisser d'un lien) ou la page part.
+        document.addEventListener("pointercancel", annuler, { passive: true });
+        window.addEventListener("pagehide", annuler);
+        window.addEventListener("scroll", annuler, { passive: true });
+      })();
+    </script>
+
     <!-- ===== Transition de page (panneau + liseré rose) ===== -->
     <script is:inline>
       (function () {

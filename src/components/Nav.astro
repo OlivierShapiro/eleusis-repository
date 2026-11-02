@@ -149,7 +149,7 @@ const links = [
     font-family: var(--font-mono); font-weight: 500;
     font-size: 0.76rem; letter-spacing: 0.12em;
     color: var(--text-muted);
-    transition: color var(--dur-sign) var(--ease);
+    transition: color var(--dur-sign) var(--ease), opacity 0.22s var(--ease);
   }
   .nav__langue.is-active { color: var(--text); }
   a.nav__langue:hover { color: var(--accent); }
@@ -196,7 +196,7 @@ const links = [
     font-size: 0.76rem;
     color: var(--text-muted);
     position: relative;
-    transition: color var(--dur-sign) var(--ease);
+    transition: color var(--dur-sign) var(--ease), opacity 0.22s var(--ease);
   }
   .nav__link:hover { color: var(--text); }
   .nav__link.is-active { color: var(--text); }
@@ -256,14 +256,14 @@ const links = [
     color: var(--text);
     opacity: 0;
     transform: translateY(18px);
-    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease), scale 0.22s var(--ease);
   }
   .nav__overlay-link.is-active { color: var(--accent); }
   .nav__overlay-cta {
     margin-top: 1em;
     opacity: 0;
     transform: translateY(18px);
-    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease), scale 0.22s var(--ease);
   }
   /* Cascade à l'ouverture */
   .nav__overlay.is-open .nav__overlay-link,

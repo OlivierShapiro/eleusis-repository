@@ -94,7 +94,7 @@
 /* ---------- Reset ---------- */
 *, *::before, *::after { box-sizing: border-box; }
 * { margin: 0; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
 body {
   /* svh = hauteur de fenetre la PLUS PETITE, barre d'adresse mobile deployee.
      Contrairement a vh, elle ne change pas quand la barre se replie : la page
@@ -533,6 +533,45 @@ p { max-width: var(--measure); }
   animation: pgt-reveal 0.55s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 @keyframes pgt-reveal { to { transform: translateY(-101%); } }
+
+/* ============================================================
+   Retour au toucher : l'élément répond dès l'appui, pas au relâchement.
+   Classe .is-pressed posée par BaseLayout, et non :active : sur téléphone,
+   :active s'allume aussi quand le doigt commence simplement à faire défiler.
+   On anime `scale` et non `transform` : ainsi rien n'entre en conflit avec
+   GSAP (boutons magnétiques, reveals) ni avec les transform des survols.
+   !important : GSAP pose `scale: none` en ligne sur ce qu'il anime.
+   `html` en tête : il faut passer devant les styles scopés d'Astro.
+   Éléments qui ont déjà leur propre `transition` : `scale` ou `opacity` y est
+   ajouté directement dans leur composant, pour un relâchement tout aussi doux.
+   ============================================================ */
+.btn-accent, .nav__burger, .hero__scroll, .chip,
+.af__scene, .af__vig, .card__link, .ab-member__photo.is-link {
+  transition: scale 0.22s var(--ease);
+}
+.nav__logo, .footer__link, .reel__all, .ct-info a {
+  transition: opacity 0.22s var(--ease);
+}
+/* Boutons : léger enfoncement. */
+html .btn-accent.is-pressed, html .nav__burger.is-pressed, html .hero__scroll.is-pressed,
+html .chip.is-pressed, html .sr-notif.is-pressed, html .sr-modal__close.is-pressed {
+  scale: 0.97 !important;
+  transition-duration: 0.09s;
+}
+/* Grandes surfaces : à peine, sinon toute la page semble bouger. */
+html .af__scene.is-pressed, html .af__vig.is-pressed, html .card__link.is-pressed,
+html .ab-member__photo.is-link.is-pressed {
+  scale: 0.985 !important;
+  transition-duration: 0.09s;
+}
+/* Liens texte : `scale` n'agit pas sur un lien en ligne.
+   !important : GSAP peut laisser une opacité en ligne après un reveal. */
+html .nav__logo.is-pressed, html .nav__link.is-pressed, html .nav__langue.is-pressed,
+html .nav__overlay-link.is-pressed, html .footer__link.is-pressed, html .reel__all.is-pressed,
+html .ct-info a.is-pressed {
+  opacity: 0.6 !important;
+  transition-duration: 0.09s;
+}
 
 /* ============================================================
    Accessibilité — prefers-reduced-motion (CSS).

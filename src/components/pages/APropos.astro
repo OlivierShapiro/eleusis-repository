@@ -335,7 +335,7 @@ const srSrc = srEmbed || showreel.video || "";
     border: 1px solid var(--line-strong);
     border-radius: 12px; position: relative; cursor: pointer;
     box-shadow: 0 18px 50px -24px rgba(0,0,0,0.85);
-    transition: transform var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease), box-shadow var(--dur-sign) var(--ease);
+    transition: scale 0.22s var(--ease), transform var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease), box-shadow var(--dur-sign) var(--ease);
     animation: sr-breathe 2.8s ease-in-out infinite;
   }
   .sr-notif:hover {
@@ -406,7 +406,7 @@ const srSrc = srEmbed || showreel.video || "";
     width: 46px; height: 46px; border-radius: 50%;
     background: rgba(255,255,255,0.08); color: #fff; font-size: 26px; line-height: 1;
     display: grid; place-items: center; cursor: pointer;
-    transition: background var(--dur-sign) var(--ease);
+    transition: background var(--dur-sign) var(--ease), scale 0.22s var(--ease);
   }
   .sr-modal__close:hover { background: var(--accent); }
 
