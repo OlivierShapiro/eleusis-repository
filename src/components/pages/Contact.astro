@@ -43,7 +43,16 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
   <section class="ct-main">
     <div class="container ct-main__grid">
       <!-- Formulaire -->
-      <form class="ct-form" id="ct-form" novalidate>
+      <form
+        class="ct-form"
+        id="ct-form"
+        novalidate
+        data-envoi={t.contact.envoi}
+        data-err-nom={t.contact.erreurNom}
+        data-err-email-vide={t.contact.erreurEmailVide}
+        data-err-email={t.contact.erreurEmail}
+        data-err-message={t.contact.erreurMessage}
+      >
         <!-- Web3Forms : champs cachés (clé à renseigner) + honeypot anti-spam -->
         <input type="hidden" name="access_key" value={WEB3FORMS_KEY} />
         <input type="hidden" name="subject" value={t.contact.sujetMail} />
@@ -52,13 +61,15 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
         <div class="ct-row">
           <label class="field" data-reveal>
             <span class="field__label">{t.contact.nom}</span>
-            <input class="field__input" type="text" name="nom" autocomplete="name" placeholder={t.contact.nomPlaceholder} required />
+            <input class="field__input" type="text" name="nom" autocomplete="name" placeholder={t.contact.nomPlaceholder} required aria-describedby="err-nom" />
+            <span class="field__erreur" id="err-nom" aria-live="polite" hidden></span>
             <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
             <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
           </label>
           <label class="field" data-reveal>
             <span class="field__label">{t.contact.email}</span>
-            <input class="field__input" type="email" name="email" autocomplete="email" placeholder={t.contact.emailPlaceholder} required />
+            <input class="field__input" type="email" name="email" autocomplete="email" placeholder={t.contact.emailPlaceholder} required aria-describedby="err-email" />
+            <span class="field__erreur" id="err-email" aria-live="polite" hidden></span>
             <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
             <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
           </label>
@@ -78,7 +89,8 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
 
         <label class="field field--area" data-reveal>
           <span class="field__label">{t.contact.message}</span>
-          <textarea class="field__input" name="message" rows="4" placeholder={t.contact.messagePlaceholder} required></textarea>
+          <textarea class="field__input" name="message" rows="4" placeholder={t.contact.messagePlaceholder} required aria-describedby="err-message"></textarea>
+          <span class="field__erreur" id="err-message" aria-live="polite" hidden></span>
           <span class="mark tl"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
           <span class="mark br"><i class="arm arm-h"></i><i class="arm arm-v"></i></span>
         </label>
@@ -192,6 +204,14 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
   }
   .field__input::placeholder { color: var(--text-faint); }
   .field__input:focus { outline: none; border-color: var(--accent-border); }
+  .field__input[aria-invalid="true"] { border-color: var(--accent); }
+  /* Sous le champ, hors du flux : le message ne décale rien à son apparition.
+     L'écart entre les champs (28 px minimum) lui laisse la place. */
+  .field__erreur {
+    position: absolute; left: 0.2em; right: 0; top: calc(100% + 6px);
+    font-family: var(--font-mono); font-size: 0.72rem; line-height: 1.3;
+    color: var(--accent);
+  }
   /* Autofill navigateur (email/nom enregistrés) : on neutralise le fond blanc.
      La transition « infinie » sur background-color empêche le fond d'autofill
      de se peindre → le champ reste transparent (texture visible) + texte clair. */
@@ -222,8 +242,10 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
   .chip span {
     display: inline-block;
     padding: 0.6em 1.1em;
-    border: 1px solid var(--line-strong);
-    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 99px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
     font-family: var(--font-mono);
     font-weight: 500;
     text-transform: uppercase;
@@ -336,6 +358,42 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
     var errEl = document.getElementById("ct-error");
     if (!form || !overlay) return;
     var btn = form.querySelector(".ct-send");
+    var champs = Array.prototype.slice.call(form.querySelectorAll(".field__input"));
+    var tenteEnvoi = false;
+
+    // Le message à afficher pour ce champ, ou "" s'il est bon. On valide ici
+    // plutôt que de laisser faire le navigateur : ses bulles sont dans la langue
+    // de l'appareil, et il accepte un nom fait uniquement d'espaces.
+    function erreurDe(c) {
+      var d = form.dataset;
+      var val = c.value.trim();
+      if (c.name === "nom") return val ? "" : d.errNom;
+      if (c.name === "message") return val ? "" : d.errMessage;
+      if (!val) return d.errEmailVide;
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(val) ? "" : d.errEmail;
+    }
+    function afficher(c, message) {
+      var el = form.querySelector("#err-" + c.name);
+      el.textContent = message;
+      el.hidden = !message;
+      if (message) c.setAttribute("aria-invalid", "true");
+      else c.removeAttribute("aria-invalid");
+    }
+    function effacerErreurs() {
+      tenteEnvoi = false;
+      champs.forEach(function (c) { afficher(c, ""); });
+    }
+    champs.forEach(function (c) {
+      // En quittant le champ : on signale ce qui est faux, mais on ne reproche
+      // pas un champ vide à quelqu'un qui ne fait que passer, sauf après un essai.
+      c.addEventListener("blur", function () {
+        if (c.value.trim() || tenteEnvoi) afficher(c, erreurDe(c));
+      });
+      // En tapant : l'erreur disparaît dès que c'est corrigé, sans en créer de nouvelle.
+      c.addEventListener("input", function () {
+        if (c.hasAttribute("aria-invalid")) afficher(c, erreurDe(c));
+      });
+    });
     var ORIGINAL = btn ? btn.textContent : "Envoyer →";
     var keyField = form.querySelector('[name="access_key"]');
     var KEY = keyField ? keyField.value : "";
@@ -347,6 +405,7 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
     // Le formulaire est réinitialisé (champs + type de projet + bouton).
     function showSuccess() {
       form.reset();
+      effacerErreurs();
       resetBtn();
       overlay.hidden = false;
       requestAnimationFrame(function () { overlay.classList.add("is-on"); });
@@ -360,7 +419,14 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
       e.preventDefault();
       if (busy) return;
       if (errEl) errEl.hidden = true;
-      if (!form.checkValidity()) { form.reportValidity(); return; }
+      tenteEnvoi = true;
+      var premier = null;
+      champs.forEach(function (c) {
+        var message = erreurDe(c);
+        afficher(c, message);
+        if (message && !premier) premier = c;
+      });
+      if (premier) { premier.focus(); return; }
       busy = true;
 
       // Mode démo tant que la clé Web3Forms n'est pas renseignée.
@@ -369,7 +435,7 @@ const WEB3FORMS_KEY = "aa551b1a-a773-425c-85b9-a374c7cf60cb";
         return;
       }
 
-      if (btn) { btn.textContent = "Envoi…"; btn.disabled = true; }
+      if (btn) { btn.textContent = form.dataset.envoi; btn.disabled = true; }
 
       fetch("https://api.web3forms.com/submit", {
         method: "POST",

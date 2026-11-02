@@ -98,7 +98,7 @@ const srSrc = srEmbed || showreel.video || "";
       </div>
 
       <!-- Notification cliquable → ouvre le showreel -->
-      <button class="sr-notif" type="button" data-reveal data-sr-type={srType} data-sr-src={srSrc} aria-haspopup="dialog" aria-label={t.apropos.showreelAria}>
+      <button class="sr-notif" type="button" data-reveal data-sr-type={srType} data-sr-src={srSrc} data-sr-bientot={t.apropos.showreelBientot} aria-haspopup="dialog" aria-label={t.apropos.showreelAria}>
         <span class="sr-notif__icon" aria-hidden="true"></span>
         <span class="sr-notif__body">
           <span class="sr-notif__title">{t.apropos.showreelTitre}</span>
@@ -293,8 +293,10 @@ const srSrc = srEmbed || showreel.video || "";
     position: absolute; left: 12px; bottom: 12px; z-index: 3;
     font-family: var(--font-mono); font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.12em; font-size: 0.62rem; color: var(--text);
-    background: rgba(8, 8, 11, 0.5); padding: 0.4em 0.7em; border-radius: 2px;
-    -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.09); padding: 0.55em 0.95em; border-radius: 99px;
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
     opacity: 0; transform: translateY(6px);
     transition: opacity var(--dur-sign) var(--ease), transform var(--dur-sign) var(--ease);
   }
@@ -331,17 +333,18 @@ const srSrc = srEmbed || showreel.video || "";
     margin-top: clamp(34px, 6vw, 70px);
     display: inline-flex; align-items: center; gap: 16px; text-align: left;
     padding: 14px 24px 14px 16px;
-    background: var(--bg-raised);
-    border: 1px solid var(--line-strong);
-    border-radius: 12px; position: relative; cursor: pointer;
-    box-shadow: 0 18px 50px -24px rgba(0,0,0,0.85);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.17);
+    border-radius: 16px; position: relative; cursor: pointer;
+    -webkit-backdrop-filter: blur(18px) saturate(1.5); backdrop-filter: blur(18px) saturate(1.5);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 18px 50px -24px rgba(0,0,0,0.85);
     transition: scale 0.22s var(--ease), transform var(--dur-sign) var(--ease), border-color var(--dur-sign) var(--ease), box-shadow var(--dur-sign) var(--ease);
     animation: sr-breathe 2.8s ease-in-out infinite;
   }
   .sr-notif:hover {
     transform: translateY(-3px);
     border-color: var(--accent-border);
-    box-shadow: 0 26px 64px -22px rgba(0,0,0,0.9), 0 0 0 1px var(--accent-border);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 26px 64px -22px rgba(0,0,0,0.9), 0 0 0 1px var(--accent-border);
   }
   .sr-notif__icon {
     flex: none; width: 44px; height: 44px; border-radius: 50%;
@@ -366,8 +369,8 @@ const srSrc = srEmbed || showreel.video || "";
     100% { box-shadow: 0 0 0 0 rgba(255,30,99,0); }
   }
   @keyframes sr-breathe {
-    0%, 100% { box-shadow: 0 18px 50px -24px rgba(0,0,0,0.85), 0 0 0 0 rgba(255,30,99,0); }
-    50% { box-shadow: 0 18px 50px -24px rgba(0,0,0,0.85), 0 0 0 4px rgba(255,30,99,0.08); }
+    0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 18px 50px -24px rgba(0,0,0,0.85), 0 0 0 0 rgba(255,30,99,0); }
+    50% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.24), 0 18px 50px -24px rgba(0,0,0,0.85), 0 0 0 4px rgba(255,30,99,0.08); }
   }
 
   /* ---------- Modal showreel ---------- */
@@ -404,7 +407,10 @@ const srSrc = srEmbed || showreel.video || "";
   .sr-modal__close {
     position: absolute; top: clamp(14px, 3vw, 26px); right: clamp(14px, 3vw, 26px); z-index: 5;
     width: 46px; height: 46px; border-radius: 50%;
-    background: rgba(255,255,255,0.08); color: #fff; font-size: 26px; line-height: 1;
+    background: rgba(255,255,255,0.09); color: #fff; font-size: 26px; line-height: 1;
+    border: 1px solid rgba(255,255,255,0.17);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.24);
+    -webkit-backdrop-filter: blur(14px) saturate(1.5); backdrop-filter: blur(14px) saturate(1.5);
     display: grid; place-items: center; cursor: pointer;
     transition: background var(--dur-sign) var(--ease), scale 0.22s var(--ease);
   }
@@ -442,7 +448,7 @@ const srSrc = srEmbed || showreel.video || "";
       var type = notif.getAttribute("data-sr-type");
       var src = notif.getAttribute("data-sr-src");
       if (type === "soon") {
-        inner.innerHTML = '<div class="coming-soon" aria-hidden="true"><div class="coming-soon__grad"></div><span class="coming-soon__label">Prochainement</span></div>';
+        inner.innerHTML = '<div class="coming-soon" aria-hidden="true"><div class="coming-soon__grad"></div><span class="coming-soon__label">' + notif.getAttribute("data-sr-bientot") + '</span></div>';
         return true;
       }
       if (!src) return false;
@@ -457,13 +463,31 @@ const srSrc = srEmbed || showreel.video || "";
     function unlock() { if (window.lenis) window.lenis.start(); document.body.style.overflow = ""; }
 
     var PUCK_GROW = 1.45; // facteur d'agrandissement du disque une fois au centre
+    var reduire = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var anim = null;      // la chronologie en cours, pour pouvoir l'interrompre
+    var arrive = false;   // le disque a-t-il atteint le centre (vidéo ouverte) ?
+    var fermeture = false;
+    var ANIMES = [modal, frame, inner2, puck, tri, closeBtn];
+
+    // Sans GSAP, ou si le visiteur demande moins d'animations : un simple fondu,
+    // sans le disque qui traverse l'écran.
+    function fondu(entree, fin) {
+      modal.style.transition = "opacity 0.2s ease";
+      modal.style.visibility = "visible";
+      modal.style.opacity = entree ? "0" : "1";
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { modal.style.opacity = entree ? "1" : "0"; });
+      });
+      if (fin) setTimeout(fin, 220);
+    }
 
     function open() {
       if (!injectVideo()) return;
       modal.hidden = false;
       lock();
+      closeBtn.focus({ preventScroll: true });
       var g = window.gsap;
-      if (!g) { modal.style.opacity = "1"; modal.style.visibility = "visible"; return; }
+      if (!g || reduire) { fondu(true); return; }
 
       var ir = icon.getBoundingClientRect();
       var size = ir.width;
@@ -474,7 +498,8 @@ const srSrc = srEmbed || showreel.video || "";
       var rStart = (size / 2) * PUCK_GROW;
       var rMax = Math.hypot(fr.width, fr.height) / 2 + 12;
 
-      g.killTweensOf([modal, frame, inner2, puck, tri]);
+      g.killTweensOf(ANIMES);
+      arrive = false;
       g.set(modal, { autoAlpha: 0 });
       // cadre totalement masqué (rayon 0) tant que le disque n'est pas arrivé
       g.set(frame, { autoAlpha: 1, scale: 1, clipPath: "circle(0px at 50% 50%)" });
@@ -484,7 +509,7 @@ const srSrc = srEmbed || showreel.video || "";
 
       var ARRIVE = 0.9; // instant où le disque atteint le centre
 
-      var tl = g.timeline();
+      var tl = anim = g.timeline();
       // fond
       tl.to(modal, { autoAlpha: 1, duration: 0.45, ease: "power2.out" }, 0);
       // 1) anticipation : le disque se ramasse légèrement
@@ -493,6 +518,7 @@ const srSrc = srEmbed || showreel.video || "";
       tl.to(puck, { x: cx - size / 2, y: cy - size / 2, scale: PUCK_GROW, duration: 0.7, ease: "power3.inOut" }, 0.2);
       // 3) le triangle « play » se dilate et s'efface juste avant l'arrivée
       tl.to(tri, { scale: 1.7, autoAlpha: 0, duration: 0.3, ease: "power2.out" }, ARRIVE - 0.18);
+      tl.call(function () { arrive = true; }, null, ARRIVE);
       // 4) à l'arrivée seulement : la vidéo s'ouvre depuis l'intérieur du disque
       tl.fromTo(frame,
         { clipPath: "circle(" + rStart + "px at 50% 50%)" },
@@ -503,20 +529,58 @@ const srSrc = srEmbed || showreel.video || "";
         onComplete: function () { g.set(puck, { display: "none" }); } }, ARRIVE + 0.04);
     }
 
+    // Le chemin inverse de l'ouverture : la vidéo se résorbe dans le disque, et le
+    // disque repart se poser sur l'icône d'où il est venu. Tout part de l'état
+    // affiché à l'instant T : on peut fermer pendant l'ouverture, sans saut.
     function close() {
+      if (fermeture) return;
+      fermeture = true;
       unlock();
+      notif.focus({ preventScroll: true });
       var g = window.gsap;
-      function done() { modal.hidden = true; inner.innerHTML = ""; if (g) g.set([modal, frame, inner2, puck, tri], { clearProps: "all" }); }
-      if (!g) { modal.style.opacity = ""; modal.style.visibility = ""; done(); return; }
-      g.killTweensOf([modal, frame, inner2, puck, tri]);
-      g.set(puck, { display: "none" });
+      function done() {
+        fermeture = false;
+        modal.hidden = true;
+        inner.innerHTML = "";
+        modal.style.transition = "";
+        modal.style.opacity = "";
+        modal.style.visibility = "";
+        if (g) g.set(ANIMES, { clearProps: "all" });
+      }
+      if (!g || reduire) { fondu(false, done); return; }
+
+      if (anim) anim.kill();
+      g.killTweensOf(ANIMES);
+
+      var ir = icon.getBoundingClientRect();
+      var size = ir.width;
       var fr = frame.getBoundingClientRect();
-      var rStart = Math.min(fr.width, fr.height) * 0.18;
-      var tl = g.timeline({ onComplete: done });
-      // la vidéo se referme en cercle puis le fond s'efface
-      tl.to(frame, { clipPath: "circle(" + rStart + "px at 50% 50%)", duration: 0.4, ease: "power3.in" }, 0);
-      tl.to(inner2, { scale: 1.1, duration: 0.4, ease: "power3.in" }, 0);
-      tl.to(modal, { autoAlpha: 0, duration: 0.34, ease: "power2.in" }, 0.16);
+      var cx = fr.left + fr.width / 2, cy = fr.top + fr.height / 2;
+      var rDisque = (size / 2) * PUCK_GROW;
+      var DEPART = 0; // instant où le disque quitte le centre
+
+      var tl = anim = g.timeline({ onComplete: done });
+      tl.to(closeBtn, { autoAlpha: 0, duration: 0.15, ease: "power2.out" }, 0);
+
+      if (arrive) {
+        // Le disque (éteint ou en train de s'éteindre) reprend sa place au centre
+        g.set(puck, { display: "grid", width: size, height: size, x: cx - size / 2, y: cy - size / 2, scale: PUCK_GROW, transformOrigin: "50% 50%" });
+        g.set(tri, { scale: 1.7, transformOrigin: "40% 50%" });
+        tl.to(frame, { clipPath: "circle(" + rDisque + "px at 50% 50%)", duration: 0.34, ease: "power3.in" }, 0);
+        tl.to(inner2, { scale: 1.12, duration: 0.34, ease: "power3.in" }, 0);
+        tl.to(puck, { autoAlpha: 1, duration: 0.12, ease: "none" }, 0.22);
+        tl.to(tri, { autoAlpha: 1, scale: 1, duration: 0.24, ease: "power2.out" }, 0.28);
+        tl.set(frame, { autoAlpha: 0 }, 0.34);
+        DEPART = 0.3;
+      } else {
+        // Fermé avant l'arrivée : le disque fait simplement demi-tour
+        tl.to(puck, { autoAlpha: 1, duration: 0.1, ease: "none" }, 0);
+        tl.to(tri, { autoAlpha: 1, scale: 1, duration: 0.15, ease: "power2.out" }, 0);
+      }
+      // Retour à l'icône. Seul le fond s'efface, pas le modal entier : le disque en
+      // fait partie et doit rester plein jusqu'à se confondre avec l'icône.
+      tl.to(puck, { x: ir.left, y: ir.top, scale: 1, duration: 0.5, ease: "power3.inOut" }, DEPART);
+      tl.to(modal, { backgroundColor: "rgba(8,8,11,0)", backdropFilter: "blur(0px)", duration: 0.5, ease: "power2.inOut" }, DEPART);
     }
 
     notif.addEventListener("click", open);

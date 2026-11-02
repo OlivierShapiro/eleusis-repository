@@ -535,6 +535,28 @@ p { max-width: var(--measure); }
 @keyframes pgt-reveal { to { transform: translateY(-101%); } }
 
 /* ============================================================
+   Les images du site reprennent le langage de la page Projets : coins arrondis
+   et micro-bordure. Tout est dans ce bloc : le retirer rend aux images leur
+   forme d'origine.
+   `html` et classe doublée : il faut passer devant les styles scopés d'Astro.
+   ============================================================ */
+html .pj-film__frame.pj-film__frame, html .ab-member__photo.ab-member__photo, html .card__media.card__media {
+  border-radius: 14px;
+}
+html .pj-strip__item.pj-strip__item, html .sv-photo.sv-photo, html .ab-float__inner.ab-float__inner,
+html .ct-photo.ct-photo, html .proc__pin.proc__pin {
+  border-radius: 10px;
+}
+.pj-film__frame::after, .ab-member__photo::after, .card__media::after,
+.pj-strip__item::after, .sv-photo::after, .ab-float__inner::after,
+.ct-photo::after, .proc__pin::after {
+  content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none;
+  border-radius: inherit;
+  /* gris bleuté, de la famille du fond de page : présent sans trancher */
+  box-shadow: inset 0 0 0 1px rgba(130, 145, 180, 0.26);
+}
+
+/* ============================================================
    Retour au toucher : l'élément répond dès l'appui, pas au relâchement.
    Classe .is-pressed posée par BaseLayout, et non :active : sur téléphone,
    :active s'allume aussi quand le doigt commence simplement à faire défiler.
@@ -578,6 +600,53 @@ html .ct-info a.is-pressed {
    Le pendant JS (pas de Lenis, pas de scrub) arrivera à l'Étape 3.
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
-  * { animation: none !important; transition: none !important; }
+  /* Moins de mouvement ne veut pas dire aucun retour visuel : plus rien ne se
+     déplace ni ne s'anime en boucle, mais les fondus restent, car ils ne
+     gênent pas et aident à comprendre ce qui change. */
+  *, *::before, *::after {
+    animation: none !important;
+    transition-property: opacity, color, background-color, border-color !important;
+    transition-duration: 0.2s !important;
+    transition-delay: 0s !important;
+  }
   .pgt { display: none; }
+  /* L'équivalent doux du panneau de transition : un fondu entre les pages,
+     là où le navigateur le permet. Ailleurs la page s'ouvre directement. */
+  @view-transition { navigation: auto; }
+  /* À l'appui : on s'atténue au lieu de rétrécir. */
+  html .is-pressed.is-pressed.is-pressed { scale: none !important; opacity: 0.7 !important; }
+}
+
+/* ============================================================
+   Accessibilité : réglage système « réduire la transparence ».
+   Les surfaces de verre deviennent pleines, sans flou.
+   ============================================================ */
+@media (prefers-reduced-transparency: reduce) {
+  html .nav.is-scrolled { background: #101014 !important; }
+  html .ct-overlay, html .sr-modal { background: #08080b !important; }
+  html .ab-member__ig, html .sr-modal__close, html .sr-notif { background: #1b1b22 !important; }
+  html .nav.is-scrolled, html .ct-overlay, html .sr-modal, html .ab-member__ig,
+  html .sr-modal__close, html .sr-notif {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+/* ============================================================
+   Accessibilité : réglage système « augmenter le contraste ».
+   Textes secondaires et filets plus francs, barre de navigation pleine.
+   ============================================================ */
+@media (prefers-contrast: more) {
+  :root {
+    --text-muted: #C9CEDA;
+    --text-faint: #A4A8B5;
+    --line: rgba(255, 255, 255, 0.32);
+    --line-strong: rgba(255, 255, 255, 0.55);
+    --accent-border: var(--accent);
+  }
+  html .nav.is-scrolled {
+    background: #101014 !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
 }
