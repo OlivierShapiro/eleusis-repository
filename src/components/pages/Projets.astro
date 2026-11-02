@@ -32,7 +32,7 @@ const coulissesLayout = [
 const dernier = projets.find((p) => p.latest) ?? projets.filter((p) => !p.placeholder)[0];
 const autres = projets
   .map((p, i) => ({ p, num: String(i + 1).padStart(2, "0") }))
-  .filter((x) => x.p !== dernier);
+  .filter((x) => x.p !== dernier && !x.p.masque);
 
 ---
 

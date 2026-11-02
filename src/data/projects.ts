@@ -23,6 +23,7 @@ export interface Project {
   credits?: [string, string][];
   stills?: number;      // nb de stills dispo (public/images/projets/<slug>/still-0X.webp)
   placeholder?: boolean;
+  masque?: boolean;     // gardé dans les données mais pas affiché sur /projets
   latest?: boolean;     // dernier projet réalisé : mis en avant sur /projets
   /** Version anglaise des seuls champs qui changent. Le titre n'y est pas :
    *  c'est un nom propre. Un champ absent retombe sur le français. */
@@ -183,10 +184,11 @@ export const projects: Project[] = [
       ],
     },
   },
-  // ── Placeholders « à venir » : affichent un visuel « Prochainement »
-  //    (dégradé animé) tant qu'aucun vrai projet n'est fourni. ──────────
-  { slug: "projet-05", title: "Projet 05", cardType: "Publicité", category: "publicite", placeholder: true,
+  // ── Emplacements libres, masqués de /projets. Pour publier un nouveau projet :
+  //    remplir la fiche comme les autres, puis retirer `placeholder` et `masque`.
+  //    Retirer `masque` seul les réaffiche en cases « À venir ». ──────────
+  { slug: "projet-05", title: "Projet 05", cardType: "Publicité", category: "publicite", placeholder: true, masque: true,
     en: { title: "Project 05", cardType: "Advertising" } },
-  { slug: "projet-06", title: "Projet 06", cardType: "Documentaire", category: "documentaire", placeholder: true,
+  { slug: "projet-06", title: "Projet 06", cardType: "Documentaire", category: "documentaire", placeholder: true, masque: true,
     en: { title: "Project 06", cardType: "Documentary" } },
 ];
